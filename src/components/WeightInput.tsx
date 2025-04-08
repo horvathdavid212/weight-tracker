@@ -1,8 +1,9 @@
 import React, {useState} from 'react';
-import {View, TextInput, Button, StyleSheet, Alert, Text} from 'react-native';
+import {View, TextInput, Button, StyleSheet, Alert, Text, ActivityIndicator} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {WeightEntry} from '../types/WeightEntry';
 import {useFocusEffect} from "@react-navigation/native";
+import {WeightDataService} from '../services/WeightDataService';
 
 interface WeightInputProps {
     onNewEntry: (entry: WeightEntry) => void;
@@ -44,14 +45,16 @@ const WeightInput: React.FC<WeightInputProps> = ({onNewEntry}) => {
 
         try {
             setLoading(true);
-            // Get current entries, add the new entry, and update AsyncStorage.
-            const storedEntries = await AsyncStorage.getItem('weightEntries');
-            const entries: WeightEntry[] = storedEntries ? JSON.parse(storedEntries) : [];
-            const updatedEntries = [newEntry, ...entries];
-            await AsyncStorage.setItem('weightEntries', JSON.stringify(updatedEntries));
-            // Notify parent of the new entry and clear the input.
-            onNewEntry(newEntry);
-            setWeight('');
+            // Use the data service to save the entry
+            const success = await WeightDataService.addEntry(newEntry);
+
+            if (success) {
+                // Notify parent of the new entry and clear the input
+                onNewEntry(newEntry);
+                setWeight('');
+            } else {
+                Alert.alert('Error', 'There was a problem saving your weight. Please try again.');
+            }
         } catch (error) {
             console.error('Error saving weight entry:', error);
             Alert.alert('Error', 'There was a problem saving your weight. Please try again.');
@@ -84,7 +87,17 @@ const WeightInput: React.FC<WeightInputProps> = ({onNewEntry}) => {
                 returnKeyType="done"
                 onSubmitEditing={saveWeight}
             />
-            <Button title="Save" onPress={saveWeight} disabled={loading || weight.trim() === ''}/>
+            <View style={styles.buttonContainer}>
+                {loading ? (
+                    <ActivityIndicator size="small" color="#2196F3" />
+                ) : (
+                    <Button
+                        title="Save"
+                        onPress={saveWeight}
+                        disabled={loading || weight.trim() === ''}
+                    />
+                )}
+            </View>
         </View>
     );
 };
@@ -92,10 +105,20 @@ const WeightInput: React.FC<WeightInputProps> = ({onNewEntry}) => {
 const styles = StyleSheet.create({
     container: {
         marginBottom: 20,
+        backgroundColor: '#f9f9f9',
+        padding: 15,
+        borderRadius: 8,
+        elevation: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 1,
     },
     label: {
         fontSize: 16,
-        marginBottom: 5,
+        marginBottom: 8,
+        fontWeight: '500',
+        color: '#333',
     },
     reminderText: {
         fontSize: 14,
@@ -104,10 +127,16 @@ const styles = StyleSheet.create({
     },
     input: {
         borderWidth: 1,
-        borderColor: '#ccc',
-        padding: 10,
-        marginBottom: 10,
-        borderRadius: 4,
+        borderColor: '#ddd',
+        padding: 12,
+        marginBottom: 15,
+        borderRadius: 6,
+        backgroundColor: '#fff',
+        fontSize: 16,
+    },
+    buttonContainer: {
+        height: 40,
+        justifyContent: 'center',
     },
 });
 

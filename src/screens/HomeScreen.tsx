@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Button } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, StyleSheet, Button, ActivityIndicator } from 'react-native';
 import { WeightEntry } from '../types/WeightEntry';
 import WeightInput from "../components/WeightInput";
 import WeightChart from "../components/WeightChart";
 import WeightEntryList from "../components/WeightEntryList";
 import EditEntry from "../components/EditEntry";
+import { WeightDataService } from '../services/WeightDataService';
 
 import { StackNavigationProp } from '@react-navigation/stack';
 import DebugPanel from "../components/DebugPanel";
@@ -21,16 +21,21 @@ interface HomeScreenProps {
     navigation: HomeScreenNavigationProp;
 }
 
-
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     const [entries, setEntries] = useState<WeightEntry[]>([]);
     const [selectedEntryIndex, setSelectedEntryIndex] = useState<number | null>(null);
     const [editingEntry, setEditingEntry] = useState<WeightEntry | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
 
     const loadEntries = async () => {
-        const data = await AsyncStorage.getItem('weightEntries');
-        if (data) {
-            setEntries(JSON.parse(data));
+        setIsLoading(true);
+        try {
+            const data = await WeightDataService.getEntries();
+            setEntries(data);
+        } catch (error) {
+            console.error('Error loading entries:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -39,6 +44,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     }, []);
 
     const handleNewEntry = (entry: WeightEntry) => {
+        // Update UI immediately for better UX
         const updatedEntries = [entry, ...entries];
         setEntries(updatedEntries);
     };
@@ -49,32 +55,56 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     };
 
     const handleUpdateEntry = async (index: number, updatedEntry: WeightEntry) => {
-        const updatedEntries = [...entries];
-        updatedEntries[index] = updatedEntry;
-        setEntries(updatedEntries);
-        await AsyncStorage.setItem('weightEntries', JSON.stringify(updatedEntries));
-        setSelectedEntryIndex(null);
-        setEditingEntry(null);
+        try {
+            const success = await WeightDataService.updateEntry(index, updatedEntry);
+            if (success) {
+                const updatedEntries = [...entries];
+                updatedEntries[index] = updatedEntry;
+                setEntries(updatedEntries);
+            }
+        } catch (error) {
+            console.error('Error updating entry:', error);
+        } finally {
+            setSelectedEntryIndex(null);
+            setEditingEntry(null);
+        }
     };
 
     const handleDeleteEntry = async (index: number) => {
-        const updatedEntries = entries.filter((_, i) => i !== index);
-        setEntries(updatedEntries);
-        await AsyncStorage.setItem('weightEntries', JSON.stringify(updatedEntries));
-        setSelectedEntryIndex(null);
-        setEditingEntry(null);
+        try {
+            const success = await WeightDataService.deleteEntry(index);
+            if (success) {
+                const updatedEntries = entries.filter((_, i) => i !== index);
+                setEntries(updatedEntries);
+            }
+        } catch (error) {
+            console.error('Error deleting entry:', error);
+        } finally {
+            setSelectedEntryIndex(null);
+            setEditingEntry(null);
+        }
     };
 
     return (
         <View style={styles.container}>
             <DebugPanel onDataChange={loadEntries} />
             <WeightInput onNewEntry={handleNewEntry} />
-            <WeightChart entries={entries} />
-            <WeightEntryList
-                entries={entries}
-                onSelectEntry={handleSelectEntry}
-                onDeleteEntry={handleDeleteEntry}
-            />
+
+            {isLoading ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#2196F3" />
+                </View>
+            ) : (
+                <>
+                    <WeightChart entries={entries} />
+                    <WeightEntryList
+                        entries={entries}
+                        onSelectEntry={handleSelectEntry}
+                        onDeleteEntry={handleDeleteEntry}
+                    />
+                </>
+            )}
+
             {selectedEntryIndex !== null && editingEntry && (
                 <EditEntry
                     entry={editingEntry}
@@ -88,14 +118,39 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     }}
                 />
             )}
-            <Button title="Go to Settings" onPress={() => navigation.navigate('Settings')} />
+
+            <View style={styles.settingsButton}>
+                <Button
+                    title="Go to Settings"
+                    onPress={() => navigation.navigate('Settings')}
+                />
+            </View>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, marginTop: 40 },
+    container: {
+        flex: 1,
+        padding: 20,
+        backgroundColor: '#fff'
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 20,
+        marginTop: 40
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginVertical: 20
+    },
+    settingsButton: {
+        marginTop: 10,
+        marginBottom: 20
+    }
 });
 
 export default HomeScreen;
