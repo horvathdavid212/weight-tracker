@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Weight Tracker Icon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .canvas-container {
+            margin-bottom: 30px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #39FF14;
+            color: #0F0F0F;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        h2 {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Weight Tracker Icon Generator</h1>
+    <p>Click the buttons below to generate and download the icons for your app.</p>
+
+    <h2>App Icon (1024x1024)</h2>
+    <div class="canvas-container">
+        <canvas id="appIcon" width="1024" height="1024"></canvas><br>
+        <button onclick="downloadCanvas('appIcon', 'icon.png')">Download App Icon</button>
+    </div>
+
+    <h2>Splash Screen (1242x2436)</h2>
+    <div class="canvas-container">
+        <canvas id="splashScreen" width="1242" height="2436"></canvas><br>
+        <button onclick="downloadCanvas('splashScreen', 'splash-icon.png')">Download Splash Screen</button>
+    </div>
+
+    <h2>Adaptive Icon (1024x1024)</h2>
+    <div class="canvas-container">
+        <canvas id="adaptiveIcon" width="1024" height="1024"></canvas><br>
+        <button onclick="downloadCanvas('adaptiveIcon', 'adaptive-icon.png')">Download Adaptive Icon</button>
+    </div>
+
+    <h2>Favicon (32x32)</h2>
+    <div class="canvas-container">
+        <canvas id="favicon" width="32" height="32"></canvas><br>
+        <button onclick="downloadCanvas('favicon', 'favicon.png')">Download Favicon</button>
+    </div>
+
+    <script>
+        // Colors
+        const colors = {
+            background: '#0F0F0F',
+            neonGreen: '#39FF14',
+            gray: '#444444',
+            white: '#FFFFFF'
+        };
+
+        // Draw app icon
+        function drawAppIcon() {
+            const canvas = document.getElementById('appIcon');
+            const ctx = canvas.getContext('2d');
+            
+            // Background
+            ctx.fillStyle = colors.background;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Scale base
+            ctx.fillStyle = colors.gray;
+            roundRect(ctx, 200, 750, 624, 50, 25, true);
+            
+            // Scale platform
+            ctx.fillStyle = colors.neonGreen;
+            roundRect(ctx, 250, 650, 524, 30, 15, true);
+            
+            // Scale columns
+            ctx.fillStyle = colors.gray;
+            roundRect(ctx, 300, 680, 30, 70, 5, true);
+            roundRect(ctx, 694, 680, 30, 70, 5, true);
+            
+            // Weight display
+            ctx.fillStyle = colors.background;
+            ctx.strokeStyle = colors.neonGreen;
+            ctx.lineWidth = 10;
+            roundRect(ctx, 262, 450, 500, 120, 20, true, true);
+            
+            // Weight text
+            ctx.fillStyle = colors.neonGreen;
+            ctx.font = 'bold 80px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('75.5', 462, 530);
+            
+            // Weight unit
+            ctx.fillStyle = colors.white;
+            ctx.font = 'bold 40px Arial';
+            ctx.fillText('kg', 600, 530);
+        }
+
+        // Draw splash screen
+        function drawSplashScreen() {
+            const canvas = document.getElementById('splashScreen');
+            const ctx = canvas.getContext('2d');
+            
+            // Background
+            ctx.fillStyle = colors.background;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // App name
+            ctx.fillStyle = colors.white;
+            ctx.font = 'bold 80px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('WEIGHT TRACKER', canvas.width/2, 1500);
+            
+            // Scale (centered and smaller)
+            const scale = 0.8;
+            const centerX = canvas.width/2;
+            const centerY = 1000;
+            
+            // Scale base
+            ctx.fillStyle = colors.gray;
+            roundRect(ctx, centerX - 312*scale, centerY + 250*scale, 624*scale, 50*scale, 25*scale, true);
+            
+            // Scale platform
+            ctx.fillStyle = colors.neonGreen;
+            roundRect(ctx, centerX - 262*scale, centerY + 150*scale, 524*scale, 30*scale, 15*scale, true);
+            
+            // Scale columns
+            ctx.fillStyle = colors.gray;
+            roundRect(ctx, centerX - 212*scale, centerY + 180*scale, 30*scale, 70*scale, 5*scale, true);
+            roundRect(ctx, centerX + 182*scale, centerY + 180*scale, 30*scale, 70*scale, 5*scale, true);
+            
+            // Weight display
+            ctx.fillStyle = colors.background;
+            ctx.strokeStyle = colors.neonGreen;
+            ctx.lineWidth = 10*scale;
+            roundRect(ctx, centerX - 250*scale, centerY - 50*scale, 500*scale, 120*scale, 20*scale, true, true);
+            
+            // Weight text
+            ctx.fillStyle = colors.neonGreen;
+            ctx.font = `bold ${80*scale}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.fillText('75.5', centerX - 50*scale, centerY + 30*scale);
+            
+            // Weight unit
+            ctx.fillStyle = colors.white;
+            ctx.font = `bold ${40*scale}px Arial`;
+            ctx.fillText('kg', centerX + 100*scale, centerY + 30*scale);
+        }
+
+        // Draw adaptive icon
+        function drawAdaptiveIcon() {
+            const canvas = document.getElementById('adaptiveIcon');
+            const ctx = canvas.getContext('2d');
+            
+            // Transparent background
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Scale platform
+            ctx.fillStyle = colors.neonGreen;
+            roundRect(ctx, 200, 550, 624, 30, 15, true);
+            
+            // Scale columns
+            ctx.fillStyle = colors.gray;
+            roundRect(ctx, 300, 580, 30, 120, 5, true);
+            roundRect(ctx, 694, 580, 30, 120, 5, true);
+            
+            // Weight display
+            ctx.fillStyle = colors.background;
+            ctx.strokeStyle = colors.neonGreen;
+            ctx.lineWidth = 10;
+            roundRect(ctx, 262, 350, 500, 120, 20, true, true);
+            
+            // Weight text
+            ctx.fillStyle = colors.neonGreen;
+            ctx.font = 'bold 80px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('75.5', 462, 430);
+            
+            // Weight unit
+            ctx.fillStyle = colors.white;
+            ctx.font = 'bold 40px Arial';
+            ctx.fillText('kg', 600, 430);
+        }
+
+        // Draw favicon
+        function drawFavicon() {
+            const canvas = document.getElementById('favicon');
+            const ctx = canvas.getContext('2d');
+            
+            // Background
+            ctx.fillStyle = colors.background;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Scale platform
+            ctx.fillStyle = colors.neonGreen;
+            ctx.fillRect(6, 18, 20, 2);
+            
+            // Scale columns
+            ctx.fillStyle = colors.gray;
+            ctx.fillRect(9, 20, 2, 5);
+            ctx.fillRect(21, 20, 2, 5);
+            
+            // Weight display
+            ctx.fillStyle = colors.background;
+            ctx.strokeStyle = colors.neonGreen;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(8, 12, 16, 5);
+            
+            // Weight indicator
+            ctx.fillStyle = colors.neonGreen;
+            ctx.fillRect(10, 14, 8, 1);
+        }
+
+        // Helper function to draw rounded rectangles
+        function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+            if (typeof radius === 'undefined') {
+                radius = 5;
+            }
+            if (typeof radius === 'number') {
+                radius = {tl: radius, tr: radius, br: radius, bl: radius};
+            } else {
+                var defaultRadius = {tl: 0, tr: 0, br: 0, bl: 0};
+                for (var side in defaultRadius) {
+                    radius[side] = radius[side] || defaultRadius[side];
+                }
+            }
+            ctx.beginPath();
+            ctx.moveTo(x + radius.tl, y);
+            ctx.lineTo(x + width - radius.tr, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
+            ctx.lineTo(x + width, y + height - radius.br);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
+            ctx.lineTo(x + radius.bl, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
+            ctx.lineTo(x, y + radius.tl);
+            ctx.quadraticCurveTo(x, y, x + radius.tl, y);
+            ctx.closePath();
+            if (fill) {
+                ctx.fill();
+            }
+            if (stroke) {
+                ctx.stroke();
+            }
+        }
+
+        // Function to download canvas as image
+        function downloadCanvas(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Draw all icons when page loads
+        window.onload = function() {
+            drawAppIcon();
+            drawSplashScreen();
+            drawAdaptiveIcon();
+            drawFavicon();
+        };
+    </script>
+</body>
+</html>

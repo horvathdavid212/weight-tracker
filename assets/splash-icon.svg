@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="1242" height="2436" viewBox="0 0 1242 2436" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1242" height="2436" fill="#0F0F0F"/>
+  
+  <!-- App name -->
+  <text x="621" y="1500" font-family="Arial" font-size="80" font-weight="bold" fill="#FFFFFF" text-anchor="middle">WEIGHT TRACKER</text>
+  
+  <!-- Scale icon -->
+  <g transform="translate(321, 800) scale(0.6)">
+    <!-- Scale base -->
+    <rect x="100" y="700" width="800" height="50" rx="25" fill="#444444"/>
+    
+    <!-- Scale platform -->
+    <rect x="200" y="550" width="600" height="30" rx="15" fill="#39FF14"/>
+    
+    <!-- Scale left column -->
+    <rect x="300" y="580" width="30" height="120" rx="5" fill="#444444"/>
+    
+    <!-- Scale right column -->
+    <rect x="670" y="580" width="30" height="120" rx="5" fill="#444444"/>
+    
+    <!-- Weight display -->
+    <rect x="250" y="400" width="500" height="120" rx="20" fill="#0F0F0F" stroke="#39FF14" stroke-width="10"/>
+    
+    <!-- Weight text -->
+    <text x="500" y="480" font-family="Arial" font-size="80" font-weight="bold" fill="#39FF14" text-anchor="middle">75.5</text>
+    
+    <!-- Weight unit -->
+    <text x="650" y="480" font-family="Arial" font-size="40" font-weight="bold" fill="#FFFFFF" text-anchor="middle">kg</text>
+  </g>
+</svg>
