@@ -47,9 +47,11 @@ function computeNextReminder(frequency: string): Date | null {
     return null;
 }
 
-export async function scheduleReminder(frequency: string) {
+export async function scheduleReminder(frequency: string | number) {
+    // Convert to string if it's a number
+    const frequencyStr = typeof frequency === 'number' ? frequency.toString() : frequency;
     const { status } = await Notifications.requestPermissionsAsync();
-    console.log('Schedule reminder', frequency);
+    console.log('Schedule reminder', frequencyStr);
 
     if (status !== 'granted') {
         alert('Permission not granted for notifications');
@@ -60,29 +62,29 @@ export async function scheduleReminder(frequency: string) {
     await Notifications.cancelAllScheduledNotificationsAsync();
 
     // Compute and store the next reminder date.
-    const nextReminderDate = computeNextReminder(frequency);
+    const nextReminderDate = computeNextReminder(frequencyStr);
     if (nextReminderDate) {
         await AsyncStorage.setItem('nextReminder', nextReminderDate.toISOString());
     } else {
         await AsyncStorage.removeItem('nextReminder');
     }
 
-    if (frequency === 'disabled') {
+    if (frequencyStr === 'disabled') {
         return; // Do not schedule any notifications.
     }
 
     let trigger: Notifications.NotificationTriggerInput;
 
-    if (frequency === 'daily') {
+    if (frequencyStr === 'daily') {
         trigger = {
             type: SchedulableTriggerInputTypes.DAILY,
             hour: 12,
             minute: 0,
         };
-    } else if (frequency === 'now') {
+    } else if (frequencyStr === 'now') {
         // "Now" can be interpreted as an immediate notification.
         trigger = null;
-    } else if (frequency === 'weekly') {
+    } else if (frequencyStr === 'weekly') {
         trigger = {
             type: SchedulableTriggerInputTypes.CALENDAR,
             // Note: Expo's notifications may expect Sunday as 1 instead of 0.
@@ -91,7 +93,7 @@ export async function scheduleReminder(frequency: string) {
             minute: 0,
             repeats: true,
         };
-    } else if (frequency === 'monthly') {
+    } else if (frequencyStr === 'monthly') {
         trigger = {
             type: SchedulableTriggerInputTypes.CALENDAR,
             day: 1,
@@ -100,7 +102,7 @@ export async function scheduleReminder(frequency: string) {
             repeats: true,
         };
     } else {
-        console.warn(`Unknown reminder frequency: ${frequency}`);
+        console.warn(`Unknown reminder frequency: ${frequencyStr}`);
         return;
     }
 

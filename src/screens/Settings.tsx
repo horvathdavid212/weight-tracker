@@ -1,8 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, Button, Alert, ScrollView } from 'react-native';
+import { View, Alert, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ReminderPicker from '../components/ReminderPicker';
 import GoalCalculator from '../components/GoalCalculator';
+import { Container, Text, Card, Button } from '../components/ui';
+import { colors, spacing } from '../theme';
 
 const Settings: React.FC = () => {
     const clearReminderSettings = async () => {
@@ -16,47 +18,79 @@ const Settings: React.FC = () => {
     };
 
     return (
-        <ScrollView style={styles.container}>
-            <Text style={styles.title}>Settings</Text>
-            
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Weight Goal</Text>
-                <GoalCalculator />
-            </View>
+        <Container scrollable style={styles.container} contentContainerStyle={styles.contentContainer}>
+            <Text variant="h1" color={colors.secondary.main} style={styles.title}>
+                Settings
+            </Text>
 
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Reminder Settings</Text>
+            <Card variant="elevated" style={{...styles.section, ...styles.goalCard}}>
+                <Text variant="h3" color={colors.secondary.main} style={styles.sectionTitle}>
+                    Weight Goal
+                </Text>
+                <GoalCalculator />
+            </Card>
+
+            <Card variant="elevated" style={{...styles.section, ...styles.reminderCard}}>
+                <Text variant="h3" color={colors.secondary.main} style={styles.sectionTitle}>
+                    Reminder Settings
+                </Text>
                 <ReminderPicker />
-            </View>
-            
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Other Settings</Text>
-                <Button title="Clear Reminder Settings" onPress={clearReminderSettings} />
-            </View>
-        </ScrollView>
+            </Card>
+
+            <Card variant="elevated" style={{...styles.section, ...styles.otherCard}}>
+                <Text variant="h3" color={colors.secondary.main} style={styles.sectionTitle}>
+                    Other Settings
+                </Text>
+                <View style={styles.otherButtonContainer}>
+                    <Button
+                        title="Clear Reminder Settings"
+                        onPress={clearReminderSettings}
+                        variant="tertiary"
+                        fullWidth
+                    />
+                </View>
+            </Card>
+        </Container>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
-        backgroundColor: '#fff',
+        backgroundColor: colors.background.main,
+    },
+    contentContainer: {
+        backgroundColor: colors.background.main,
+        paddingBottom: spacing.xl,
     },
     title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        color: '#333',
+        marginBottom: spacing.lg,
     },
     section: {
-        marginBottom: 24,
+        marginBottom: spacing.lg,
+        padding: 0,
+        overflow: 'hidden',
+        backgroundColor: colors.background.paper,
     },
     sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 12,
-        color: '#444',
+        marginBottom: spacing.md,
+        padding: spacing.md,
+        paddingBottom: 0,
+    },
+    goalCard: {
+        borderTopWidth: 4,
+        borderTopColor: colors.secondary.main,
+    },
+    reminderCard: {
+        borderTopWidth: 4,
+        borderTopColor: colors.secondary.main,
+    },
+    otherCard: {
+        borderTopWidth: 4,
+        borderTopColor: colors.secondary.main,
+    },
+    otherButtonContainer: {
+        padding: spacing.md,
     },
 });
 

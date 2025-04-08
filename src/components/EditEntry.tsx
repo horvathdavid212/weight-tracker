@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import {
     View,
-    Text,
-    TextInput,
-    Button,
     StyleSheet,
     Modal,
     TouchableWithoutFeedback,
@@ -13,6 +10,8 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { WeightEntry } from '../types/WeightEntry';
+import { Button, Input, Text, Card } from './ui';
+import { colors, spacing, borderRadius } from '../theme';
 
 interface EditEntryProps {
     entry: WeightEntry;
@@ -54,27 +53,29 @@ const EditEntry: React.FC<EditEntryProps> = ({ entry, index, visible, onSave, on
     return (
         <Modal
             visible={visible}
-            animationType="none"
+            animationType="fade"
             transparent={true}
             onRequestClose={onCancel}
         >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <View style={styles.modalOverlay}>
-                    <View style={styles.modalContainer}>
-                        <Text style={styles.header}>Edit Entry</Text>
+                    <Card variant="elevated" style={styles.modalContainer}>
+                        <Text variant="h3" color={colors.secondary.main} style={styles.header}>
+                            Edit Entry
+                        </Text>
+
+                        <Input
+                            label="Weight (kg)"
+                            value={editedWeight}
+                            onChangeText={setEditedWeight}
+                            placeholder="Enter weight"
+                            keyboardType="numeric"
+                            containerStyle={styles.inputGroup}
+                        />
+
                         <View style={styles.inputGroup}>
-                            <Text style={styles.inputLabel}>Weight (kg)</Text>
-                            <TextInput
-                                value={editedWeight}
-                                onChangeText={setEditedWeight}
-                                placeholder="Enter weight"
-                                keyboardType="numeric"
-                                style={styles.input}
-                            />
-                        </View>
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.inputLabel}>Date</Text>
-                            <TouchableOpacity 
+                            <Text variant="label">Date</Text>
+                            <TouchableOpacity
                                 onPress={() => setShowDatePicker(true)}
                                 style={styles.dateButton}
                             >
@@ -83,6 +84,7 @@ const EditEntry: React.FC<EditEntryProps> = ({ entry, index, visible, onSave, on
                                 </Text>
                             </TouchableOpacity>
                         </View>
+
                         {showDatePicker && (
                             <DateTimePicker
                                 value={editedDate}
@@ -92,16 +94,33 @@ const EditEntry: React.FC<EditEntryProps> = ({ entry, index, visible, onSave, on
                                 maximumDate={new Date()}
                             />
                         )}
-                        <View style={styles.buttonContainer}>
-                            <Button title="Save Changes" onPress={saveEditedEntry} />
+
+                        <View style={styles.buttonGroup}>
+                            <Button
+                                title="Save Changes"
+                                onPress={saveEditedEntry}
+                                variant="secondary"
+                                fullWidth
+                                style={styles.buttonContainer}
+                            />
+
+                            <Button
+                                title="Delete Entry"
+                                onPress={() => onDelete(index)}
+                                variant="tertiary"
+                                fullWidth
+                                style={styles.buttonContainer}
+                            />
+
+                            <Button
+                                title="Cancel"
+                                onPress={onCancel}
+                                variant="outline"
+                                fullWidth
+                                style={styles.buttonContainer}
+                            />
                         </View>
-                        <View style={styles.buttonContainer}>
-                            <Button title="Delete Entry" onPress={() => onDelete(index)} color="red" />
-                        </View>
-                        <View style={styles.buttonContainer}>
-                            <Button title="Cancel" onPress={onCancel} color="#999" />
-                        </View>
-                    </View>
+                    </Card>
                 </View>
             </TouchableWithoutFeedback>
         </Modal>
@@ -111,59 +130,44 @@ const EditEntry: React.FC<EditEntryProps> = ({ entry, index, visible, onSave, on
 const styles = StyleSheet.create({
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.4)',
+        backgroundColor: 'rgba(0,0,0,0.8)',
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 20,
+        paddingHorizontal: spacing.md,
     },
     modalContainer: {
         width: '100%',
         maxWidth: 400,
-        backgroundColor: '#fff',
-        borderRadius: 10,
-        paddingVertical: 30,
-        paddingHorizontal: 20,
-        shadowColor: '#000',
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5,
+        backgroundColor: colors.background.paper,
+        borderRadius: borderRadius.md,
+        paddingVertical: spacing.lg,
+        paddingHorizontal: spacing.md,
+        borderLeftWidth: 4,
+        borderLeftColor: colors.secondary.main,
     },
     header: {
-        fontSize: 20,
-        fontWeight: '600',
-        marginBottom: 15,
+        marginBottom: spacing.md,
         textAlign: 'center',
-        color: '#333',
     },
     inputGroup: {
-        marginBottom: 15,
-    },
-    inputLabel: {
-        fontSize: 14,
-        marginBottom: 5,
-        color: '#555',
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 5,
-        padding: 10,
-        fontSize: 16,
-        backgroundColor: '#fafafa',
+        marginBottom: spacing.md,
     },
     dateButton: {
         borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 5,
-        padding: 10,
-        backgroundColor: '#fafafa',
+        borderColor: colors.tertiary.main,
+        borderRadius: borderRadius.sm,
+        padding: spacing.md,
+        backgroundColor: colors.background.elevated,
     },
     dateButtonText: {
         fontSize: 16,
-        color: '#333',
+        color: colors.text.primary,
+    },
+    buttonGroup: {
+        marginTop: spacing.md,
     },
     buttonContainer: {
-        marginTop: 10,
+        marginTop: spacing.sm,
     },
 });
 

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import React, {useState, useEffect} from 'react';
+import {View, StyleSheet} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { scheduleReminder } from '../notifications/scheduler';
+import {scheduleReminder} from '../notifications/scheduler';
+import {Dropdown, Text} from './ui';
+import {colors, spacing} from '../theme';
 
 const ReminderPicker: React.FC = () => {
     const [reminderFrequency, setReminderFrequency] = useState('disabled');
@@ -14,44 +15,46 @@ const ReminderPicker: React.FC = () => {
         })();
     }, []);
 
-    const onValueChange = async (value: string) => {
-        setReminderFrequency(value);
-        await AsyncStorage.setItem('reminderFrequency', value);
-        await scheduleReminder(value);
+    const onValueChange = async (value: string | number) => {
+        // Ensure value is a string for AsyncStorage
+        const stringValue = value.toString();
+        setReminderFrequency(stringValue);
+        await AsyncStorage.setItem('reminderFrequency', stringValue);
+        await scheduleReminder(stringValue);
     };
 
+    const reminderOptions = [
+        {label: "Disabled", value: "disabled"},
+        {label: "Now", value: "now"},
+        {label: "Daily", value: "daily"},
+        {label: "Weekly", value: "weekly"},
+        {label: "Monthly", value: "monthly"}
+    ];
+
     return (
-        <View>
-            <Text style={styles.label}>Reminder Frequency</Text>
-            <Picker
+        <View style={styles.container}>
+            <Text variant="caption" color={colors.text.secondary} style={styles.helperText}>
+                Set how often you want to be reminded to log your weight.
+                Daily reminders are recommended for consistent tracking.
+            </Text>
+            <Dropdown
+                label="Reminder Frequency"
                 selectedValue={reminderFrequency}
                 onValueChange={onValueChange}
-                style={styles.picker}
-            >
-                <Picker.Item label="Disabled" value="disabled" />
-                <Picker.Item label="Now" value="now" />
-                <Picker.Item label="Daily" value="daily" />
-                <Picker.Item label="Weekly" value="weekly" />
-                <Picker.Item label="Monthly" value="monthly" />
-            </Picker>
+                items={reminderOptions}
+            />
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    label: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginTop: 20,
-        marginBottom: 6,
-        color: '#333',
+    container: {
+        padding: spacing.md,
+        backgroundColor: colors.background.paper,
     },
-    picker: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 6,
-        backgroundColor: '#f9f9f9',
-        marginBottom: 20,
+    helperText: {
+        marginTop: spacing.xs,
+        marginBottom: spacing.md,
     },
 });
 

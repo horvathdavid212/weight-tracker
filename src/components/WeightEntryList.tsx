@@ -1,6 +1,8 @@
 import React from 'react';
-import { FlatList, Text, View, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { FlatList, View, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { WeightEntry } from '../types/WeightEntry';
+import { Card, Text } from './ui';
+import { colors, spacing, borderRadius } from '../theme';
 
 interface WeightEntryListProps {
     entries: WeightEntry[];
@@ -52,39 +54,51 @@ const WeightEntryList: React.FC<WeightEntryListProps> = ({ entries, onSelectEntr
 
     const renderItem = ({ item, index }: { item: WeightEntry; index: number }) => {
         const trend = getWeightTrend(index);
-        const trendColor = trend === '↓' ? '#4CAF50' : trend === '↑' ? '#F44336' : '#9E9E9E';
+        const trendColor = trend === '↓' ? colors.status.success : trend === '↑' ? colors.status.error : colors.text.secondary;
 
         return (
-            <TouchableOpacity
-                style={styles.entryContainer}
-                onPress={() => onSelectEntry(index, item)}
-                onLongPress={() => confirmDelete(index)}
-                activeOpacity={0.7}
-            >
-                <View style={styles.entryContent}>
-                    <Text style={styles.entryDate}>
-                        {formatDate(item.date)}
-                    </Text>
-                    <View style={styles.weightContainer}>
-                        <Text style={styles.entryWeight}>
-                            {item.weight} kg
+            <Card variant="elevated" style={styles.entryCard}>
+                <TouchableOpacity
+                    onPress={() => onSelectEntry(index, item)}
+                    onLongPress={() => confirmDelete(index)}
+                    activeOpacity={0.7}
+                >
+                    <View style={styles.entryContent}>
+                        <Text variant="body1" style={styles.entryDate}>
+                            {formatDate(item.date)}
                         </Text>
-                        {trend && (
-                            <Text style={[styles.trendIndicator, { color: trendColor }]}>
-                                {trend}
+                        <View style={styles.weightContainer}>
+                            <Text variant="h3" color={colors.secondary.main} style={styles.entryWeight}>
+                                {item.weight}
                             </Text>
-                        )}
+                            <Text variant="body2" style={styles.unitText}>kg</Text>
+                            {trend && (
+                                <View style={[styles.trendBadge, { backgroundColor: trendColor }]}>
+                                    <Text variant="body2" color={colors.common.white} style={styles.trendText}>
+                                        {trend}
+                                    </Text>
+                                </View>
+                            )}
+                        </View>
                     </View>
-                </View>
-            </TouchableOpacity>
+                </TouchableOpacity>
+            </Card>
         );
     };
 
     return (
         <View style={styles.container}>
-            <Text style={styles.listHeader}>Weight History</Text>
+            <Text variant="h2" color={colors.secondary.main} style={styles.listHeader}>Weight History</Text>
             {sortedEntries.length === 0 ? (
-                <Text style={styles.emptyMessage}>No weight entries yet. Add your first entry above!</Text>
+                <Card variant="outlined" style={styles.emptyCard}>
+                    <Text
+                        variant="body1"
+                        color={colors.text.secondary}
+                        align="center"
+                    >
+                        No weight entries yet. Add your first entry above!
+                    </Text>
+                </Card>
             ) : (
                 <FlatList
                     data={sortedEntries}
@@ -101,59 +115,55 @@ const WeightEntryList: React.FC<WeightEntryListProps> = ({ entries, onSelectEntr
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        marginTop: 10,
+        marginTop: spacing.md,
     },
     listHeader: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 10,
-        color: '#333',
+        marginBottom: spacing.md,
     },
     listContent: {
-        paddingBottom: 20,
+        paddingBottom: spacing.xl,
     },
-    entryContainer: {
-        backgroundColor: '#f9f9f9',
-        borderRadius: 8,
-        marginBottom: 8,
-        padding: 12,
+    entryCard: {
+        marginBottom: spacing.sm,
+        padding: 0,
+        overflow: 'hidden',
+        backgroundColor: colors.background.paper,
         borderLeftWidth: 4,
-        borderLeftColor: '#2196F3',
-        elevation: 1,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 1,
+        borderLeftColor: colors.secondary.main,
     },
     entryContent: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        padding: spacing.md,
     },
     entryDate: {
-        fontSize: 16,
-        color: '#555',
+        color: colors.text.secondary,
     },
     weightContainer: {
         flexDirection: 'row',
         alignItems: 'center',
     },
     entryWeight: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
+        marginRight: spacing.xs,
     },
-    trendIndicator: {
-        fontSize: 18,
-        marginLeft: 8,
+    unitText: {
+        color: colors.text.secondary,
+        marginRight: spacing.sm,
+    },
+    trendBadge: {
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xs,
+        borderRadius: borderRadius.round,
+        marginLeft: spacing.xs,
+    },
+    trendText: {
         fontWeight: 'bold',
     },
-    emptyMessage: {
-        fontSize: 16,
-        color: '#666',
-        fontStyle: 'italic',
-        textAlign: 'center',
-        marginTop: 20,
+    emptyCard: {
+        padding: spacing.lg,
+        backgroundColor: colors.background.main,
+        borderStyle: 'dashed',
     }
 });
 

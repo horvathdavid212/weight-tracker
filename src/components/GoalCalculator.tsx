@@ -1,7 +1,8 @@
 import React, {useState, useEffect} from 'react';
-import {View, Text, TextInput, StyleSheet, Alert, Button} from 'react-native';
-import {Picker} from '@react-native-picker/picker';
+import {View, StyleSheet, Alert} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {Button, Input, Text, Card, Dropdown} from './ui';
+import {colors, spacing} from '../theme';
 
 interface GoalData {
     currentWeight: number;
@@ -114,74 +115,70 @@ const GoalCalculator: React.FC = () => {
         );
     };
 
+    const weightLossRateOptions = WEIGHT_LOSS_RATES.map(rate => ({
+        label: rate.label,
+        value: rate.value
+    }));
+
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Weight Goal Calculator</Text>
-
-            <View style={styles.inputContainer}>
-                <Text style={styles.label}>Current Weight (kg)</Text>
-                <TextInput
-                    style={styles.input}
+            <View style={styles.formContainer}>
+                <Input
+                    label="Current Weight (kg)"
                     value={currentWeight}
                     onChangeText={setCurrentWeight}
                     keyboardType="numeric"
                     placeholder="Enter current weight"
+                    containerStyle={styles.inputContainer}
                 />
-            </View>
 
-            <View style={styles.inputContainer}>
-                <Text style={styles.label}>Goal Weight (kg)</Text>
-                <TextInput
-                    style={styles.input}
+                <Input
+                    label="Goal Weight (kg)"
                     value={goalWeight}
                     onChangeText={setGoalWeight}
                     keyboardType="numeric"
                     placeholder="Enter goal weight"
+                    containerStyle={styles.inputContainer}
                 />
-            </View>
 
-            <View style={styles.inputContainer}>
-                <Text style={styles.label}>Weight Loss Rate</Text>
-                <View style={styles.pickerContainer}>
-                    <Picker
-                        selectedValue={weightLossRate}
-                        onValueChange={(itemValue) => setWeightLossRate(itemValue)}
-                    >
-                        {WEIGHT_LOSS_RATES.map((rate) => (
-                            <Picker.Item
-                                key={rate.value}
-                                label={rate.label}
-                                value={rate.value}
-                            />
-                        ))}
-                    </Picker>
+                <Dropdown
+                    label="Weight Loss Rate"
+                    selectedValue={weightLossRate}
+                    onValueChange={(itemValue) => setWeightLossRate(itemValue)}
+                    items={weightLossRateOptions}
+                />
+
+                <View style={styles.buttonGroup}>
+                    <Button
+                        title="Calculate Goal Date"
+                        onPress={handleCalculate}
+                        variant="secondary"
+                        fullWidth
+                        style={styles.buttonContainer}
+                    />
+
+                    <Button
+                        title="Clear Goal"
+                        onPress={handleClearGoal}
+                        variant="outline"
+                        fullWidth
+                        style={styles.buttonContainer}
+                    />
                 </View>
-            </View>
-
-            <View style={styles.buttonContainer}>
-                <Button
-                    title="Calculate Goal Date"
-                    onPress={handleCalculate}
-                />
-            </View>
-
-            <View style={styles.buttonContainer}>
-                <Button
-                    title="Clear Goal"
-                    onPress={handleClearGoal}
-                    color="red"
-                />
             </View>
 
             {recommendedDate && (
-                <View style={styles.recommendationContainer}>
-                    <Text style={styles.recommendationText}>
-                        Recommended achievement date: {formatDate(recommendedDate)}
+                <Card variant="elevated" style={styles.recommendationContainer}>
+                    <Text variant="body1" style={styles.recommendationText}>
+                        Recommended achievement date:
                     </Text>
-                    <Text style={styles.recommendationSubtext}>
+                    <Text variant="h3" color={colors.secondary.main} style={styles.dateText}>
+                        {formatDate(recommendedDate)}
+                    </Text>
+                    <Text variant="caption" style={styles.recommendationSubtext}>
                         Based on {displayedRate} kg weight loss per week
                     </Text>
-                </View>
+                </Card>
             )}
         </View>
     );
@@ -189,59 +186,39 @@ const GoalCalculator: React.FC = () => {
 
 const styles = StyleSheet.create({
     container: {
-        padding: 16,
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        marginVertical: 10,
+        padding: spacing.md,
+        backgroundColor: colors.background.paper,
     },
-    title: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 16,
-        color: '#333',
+    formContainer: {
+        marginBottom: spacing.md,
     },
     inputContainer: {
-        marginBottom: 16,
+        marginBottom: spacing.sm,
     },
-    label: {
-        fontSize: 16,
-        marginBottom: 8,
-        color: '#666',
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        padding: 12,
-        fontSize: 16,
-        backgroundColor: '#f9f9f9',
-    },
-    pickerContainer: {
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        backgroundColor: '#f9f9f9',
-        marginBottom: 16,
-    },
-    recommendationContainer: {
-        marginTop: 16,
-        padding: 16,
-        backgroundColor: '#f0f9ff',
-        borderRadius: 8,
-    },
-    recommendationText: {
-        fontSize: 16,
-        color: '#333',
-        marginBottom: 8,
-    },
-    recommendationSubtext: {
-        fontSize: 14,
-        color: '#666',
-        fontStyle: 'italic',
+    buttonGroup: {
+        marginVertical: spacing.md,
     },
     buttonContainer: {
-        marginBottom: 10,
-    }
+        marginBottom: spacing.sm,
+    },
+    recommendationContainer: {
+        marginTop: spacing.md,
+        padding: spacing.md,
+        backgroundColor: colors.background.elevated,
+        borderLeftWidth: 4,
+        borderLeftColor: colors.secondary.main,
+        marginHorizontal: spacing.md,
+        marginBottom: spacing.md,
+    },
+    recommendationText: {
+        marginBottom: spacing.xs,
+    },
+    dateText: {
+        marginBottom: spacing.sm,
+    },
+    recommendationSubtext: {
+        fontStyle: 'italic',
+    },
 });
 
 export default GoalCalculator;

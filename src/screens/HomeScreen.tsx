@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Button, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { WeightEntry } from '../types/WeightEntry';
 import WeightInput from "../components/WeightInput";
 import WeightChart from "../components/WeightChart";
 import WeightEntryList from "../components/WeightEntryList";
 import EditEntry from "../components/EditEntry";
 import { WeightDataService } from '../services/WeightDataService';
+import { Container } from '../components/ui';
+import { colors, spacing } from '../theme';
 
 import { StackNavigationProp } from '@react-navigation/stack';
 import DebugPanel from "../components/DebugPanel";
@@ -86,13 +88,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     };
 
     return (
-        <View style={styles.container}>
+        <Container scrollable style={styles.container}>
             <DebugPanel onDataChange={loadEntries} />
             <WeightInput onNewEntry={handleNewEntry} />
 
             {isLoading ? (
                 <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#2196F3" />
+                    <ActivityIndicator size="large" color={colors.secondary.main} />
                 </View>
             ) : (
                 <>
@@ -119,38 +121,27 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 />
             )}
 
-            <View style={styles.settingsButton}>
-                <Button
-                    title="Go to Settings"
-                    onPress={() => navigation.navigate('Settings')}
-                />
-            </View>
-        </View>
+
+        </Container>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
-        backgroundColor: '#fff'
+        backgroundColor: colors.background.main,
     },
     title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        marginTop: 40
+        marginBottom: spacing.md,
+        marginTop: spacing.lg,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        marginVertical: 20
+        marginVertical: spacing.lg,
     },
-    settingsButton: {
-        marginTop: 10,
-        marginBottom: 20
-    }
+
 });
 
 export default HomeScreen;
