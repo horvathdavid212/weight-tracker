@@ -10,11 +10,16 @@ type WeightChartProps = {
 export default function WeightChart({ entries }: WeightChartProps) {
     if (entries.length < 2) return null;
 
+    // Take the last 7 entries but maintain chronological order (oldest to newest)
+    const chartEntries = entries.slice(-7).sort((a, b) => 
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
     const data = {
-        labels: entries.slice(0, 7).reverse().map(e => e.date.split('T')[0]),
+        labels: chartEntries.map(e => e.date.split('T')[0]),
         datasets: [
             {
-                data: entries.slice(0, 7).reverse().map(e => e.weight),
+                data: chartEntries.map(e => e.weight),
             },
         ],
     };

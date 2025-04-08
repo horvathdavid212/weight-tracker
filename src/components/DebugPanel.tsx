@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.9)',
         padding: 10,
         borderBottomLeftRadius: 10,
-        minWidth: 200,
+        minWidth: 'auto',
     },
     debugButton: {
         padding: 10,
