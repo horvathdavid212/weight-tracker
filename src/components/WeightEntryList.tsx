@@ -10,6 +10,11 @@ interface WeightEntryListProps {
 }
 
 const WeightEntryList: React.FC<WeightEntryListProps> = ({ entries, onSelectEntry, onDeleteEntry }) => {
+    // Sort entries by date in descending order (newest first)
+    const sortedEntries = [...entries].sort((a, b) => 
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
     const deleteEntry = async (index: number) => {
         Alert.alert('Delete Entry', 'Are you sure you want to delete this entry?', [
             { text: 'Cancel', style: 'cancel' },
@@ -35,7 +40,7 @@ const WeightEntryList: React.FC<WeightEntryListProps> = ({ entries, onSelectEntr
 
     return (
         <FlatList
-            data={entries}
+            data={sortedEntries}
             keyExtractor={(_, index) => index.toString()}
             renderItem={renderItem}
         />
