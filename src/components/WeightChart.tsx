@@ -26,6 +26,13 @@ export default function WeightChart({ entries }: WeightChartProps) {
     const loadGoalData = async () => {
         try {
             const goalDataStr = await AsyncStorage.getItem('goalData');
+            if (!goalDataStr) {
+                // Clear goal line if no goal data exists
+                setGoalLine([]);
+                setGoalDates([]);
+                return;
+            }
+
             if (goalDataStr && entries.length >= 2) {
                 const goalData: GoalData = JSON.parse(goalDataStr);
                 
@@ -52,6 +59,9 @@ export default function WeightChart({ entries }: WeightChartProps) {
             }
         } catch (error) {
             console.error('Error loading goal data:', error);
+            // Clear goal line on error
+            setGoalLine([]);
+            setGoalDates([]);
         }
     };
 
@@ -68,16 +78,16 @@ export default function WeightChart({ entries }: WeightChartProps) {
             {
                 data: chartEntries.map(e => e.weight),
                 color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                strokeWidth: 2,
+                strokeWidth: 2
             },
-            {
+            // Only include goal line dataset if there are goal points
+            ...(goalLine.length > 0 ? [{
                 data: goalLine,
-                color: (opacity = 1) => `rgba(120, 176, 60, ${opacity})`, // Red color for goal line
+                color: (opacity = 1) => `rgba(231, 76, 60, ${opacity})`,
                 strokeWidth: 1,
-                dotted: true,
-            },
-        ],
-        legend: ['Actual Weight', 'Goal']
+                strokeDashArray: [5, 5]
+            }] : [])
+        ]
     };
 
     return (

@@ -85,6 +85,35 @@ const GoalCalculator: React.FC = () => {
         });
     };
 
+    const clearGoalData = async () => {
+        try {
+            await AsyncStorage.removeItem('goalData');
+            setCurrentWeight('');
+            setGoalWeight('');
+            setWeightLossRate(0.5);
+            setRecommendedDate(null);
+            setDisplayedRate(null);
+        } catch (error) {
+            console.error('Error clearing goal data:', error);
+            Alert.alert('Error', 'Failed to clear goal data');
+        }
+    };
+
+    const handleClearGoal = () => {
+        Alert.alert(
+            'Clear Goal',
+            'Are you sure you want to clear your weight goal?',
+            [
+                {text: 'Cancel', style: 'cancel'},
+                {
+                    text: 'Clear',
+                    onPress: clearGoalData,
+                    style: 'destructive'
+                }
+            ]
+        );
+    };
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Weight Goal Calculator</Text>
@@ -129,10 +158,20 @@ const GoalCalculator: React.FC = () => {
                 </View>
             </View>
 
-            <Button
-                title="Calculate Goal Date"
-                onPress={handleCalculate}
-            />
+            <View style={styles.buttonContainer}>
+                <Button
+                    title="Calculate Goal Date"
+                    onPress={handleCalculate}
+                />
+            </View>
+
+            <View style={styles.buttonContainer}>
+                <Button
+                    title="Clear Goal"
+                    onPress={handleClearGoal}
+                    color="red"
+                />
+            </View>
 
             {recommendedDate && (
                 <View style={styles.recommendationContainer}>
@@ -200,6 +239,9 @@ const styles = StyleSheet.create({
         color: '#666',
         fontStyle: 'italic',
     },
+    buttonContainer: {
+        marginBottom: 10,
+    }
 });
 
 export default GoalCalculator;
