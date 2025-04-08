@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, Button, Alert } from 'react-native';
+import { View, Text, StyleSheet, Button, Alert, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ReminderPicker from '../components/ReminderPicker';
+import GoalCalculator from '../components/GoalCalculator';
 
 const Settings: React.FC = () => {
     const clearReminderSettings = async () => {
@@ -15,17 +16,24 @@ const Settings: React.FC = () => {
     };
 
     return (
-        <View style={styles.container}>
+        <ScrollView style={styles.container}>
             <Text style={styles.title}>Settings</Text>
+            
+            <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Weight Goal</Text>
+                <GoalCalculator />
+            </View>
+
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Reminder Settings</Text>
                 <ReminderPicker />
             </View>
+            
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Other Settings</Text>
                 <Button title="Clear Reminder Settings" onPress={clearReminderSettings} />
             </View>
-        </View>
+        </ScrollView>
     );
 };
 
@@ -33,20 +41,22 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
-        backgroundColor: '#fff'
+        backgroundColor: '#fff',
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
-        marginBottom: 20
+        marginBottom: 20,
+        color: '#333',
     },
     section: {
-        marginBottom: 30
+        marginBottom: 24,
     },
     sectionTitle: {
         fontSize: 18,
-        fontWeight: '600',
-        marginBottom: 10
+        fontWeight: 'bold',
+        marginBottom: 12,
+        color: '#444',
     },
 });
 
