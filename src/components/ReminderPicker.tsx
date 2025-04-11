@@ -6,7 +6,7 @@ import {Dropdown, Text} from './ui';
 import {colors, spacing} from '../theme';
 
 const ReminderPicker: React.FC = () => {
-    const [reminderFrequency, setReminderFrequency] = useState('disabled');
+    const [reminderFrequency, setReminderFrequency] = useState<string | number>('disabled');
 
     useEffect(() => {
         (async () => {
@@ -18,7 +18,7 @@ const ReminderPicker: React.FC = () => {
     const onValueChange = async (value: string | number) => {
         // Ensure value is a string for AsyncStorage
         const stringValue = value.toString();
-        setReminderFrequency(stringValue);
+        setReminderFrequency(value); // Keep the original value type for the state
         await AsyncStorage.setItem('reminderFrequency', stringValue);
         await scheduleReminder(stringValue);
     };

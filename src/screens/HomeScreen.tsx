@@ -10,7 +10,8 @@ import { Container } from '../components/ui';
 import { colors, spacing } from '../theme';
 
 import { StackNavigationProp } from '@react-navigation/stack';
-import DebugPanel from "../components/DebugPanel";
+import { useFocusEffect } from '@react-navigation/native';
+// Debug panel is now global
 
 type RootStackParamList = {
     Home: undefined;
@@ -41,9 +42,17 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         }
     };
 
+    // Load entries when component mounts
     useEffect(() => {
         loadEntries();
     }, []);
+
+    // Reload entries when screen comes into focus (for debug panel updates)
+    useFocusEffect(
+        React.useCallback(() => {
+            loadEntries();
+        }, [])
+    );
 
     const handleNewEntry = (entry: WeightEntry) => {
         // Update UI immediately for better UX
@@ -89,7 +98,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
     return (
         <Container scrollable style={styles.container}>
-            <DebugPanel onDataChange={loadEntries} />
+            {/* Debug panel is now global */}
             <WeightInput onNewEntry={handleNewEntry} />
 
             {isLoading ? (

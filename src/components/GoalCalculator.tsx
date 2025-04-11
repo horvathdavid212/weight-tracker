@@ -144,7 +144,11 @@ const GoalCalculator: React.FC = () => {
                 <Dropdown
                     label="Weight Loss Rate"
                     selectedValue={weightLossRate}
-                    onValueChange={(itemValue) => setWeightLossRate(itemValue)}
+                    onValueChange={(itemValue) => {
+                        // Ensure we're setting a number value
+                        const numValue = typeof itemValue === 'string' ? parseFloat(itemValue) : itemValue;
+                        setWeightLossRate(numValue);
+                    }}
                     items={weightLossRateOptions}
                 />
 
