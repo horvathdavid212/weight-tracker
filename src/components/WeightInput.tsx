@@ -1,11 +1,10 @@
-import React, {useState} from 'react';
+import React, {useState, useMemo} from 'react';
 import {StyleSheet, Alert} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {WeightEntry} from '../types/WeightEntry';
-import {useFocusEffect} from "@react-navigation/native";
 import {WeightDataService} from '../services/WeightDataService';
 import {Card, Input, Button, Text} from './ui';
 import {colors, spacing} from '../theme';
+import {useNextReminder} from '../hooks/useNextReminder';
 
 interface WeightInputProps {
     onNewEntry: (entry: WeightEntry) => void;
@@ -14,24 +13,9 @@ interface WeightInputProps {
 const WeightInput: React.FC<WeightInputProps> = ({onNewEntry}) => {
     const [weight, setWeight] = useState('');
     const [loading, setLoading] = useState(false);
-    const [nextReminder, setNextReminder] = useState<string | null>(null);
 
-    // Fetch the next reminder date on component mount.
-    useFocusEffect(
-        React.useCallback(() => {
-            const fetchNextReminder = async () => {
-                try {
-                    const storedReminder = await AsyncStorage.getItem('nextReminder');
-                    if (storedReminder) {
-                        setNextReminder(storedReminder);
-                    }
-                } catch (error) {
-                    console.error('Error fetching next reminder:', error);
-                }
-            };
-            fetchNextReminder();
-        }, [])
-    );
+    // Use our custom hook to get and automatically update the next reminder
+    const nextReminder = useNextReminder();
 
     const saveWeight = async () => {
         const parsedWeight = parseFloat(weight);
@@ -65,14 +49,51 @@ const WeightInput: React.FC<WeightInputProps> = ({onNewEntry}) => {
         }
     };
 
-    const reminderText = nextReminder
-        ? `Weight log due: ${new Date(nextReminder).toLocaleString('en-US', {
+    // Format the reminder text with a more descriptive message
+    const reminderText = useMemo(() => {
+        if (!nextReminder) return "";
+
+        const reminderDate = new Date(nextReminder);
+        const now = new Date();
+
+        // Format the date and time
+        const formattedDate = reminderDate.toLocaleString('en-US', {
             month: 'short',
             day: 'numeric',
             hour: 'numeric',
+            minute: '2-digit',
             hour12: true,
-        })}`
-        : "";
+        });
+
+        // Check if the reminder is for today
+        const isToday = reminderDate.getDate() === now.getDate() &&
+                        reminderDate.getMonth() === now.getMonth() &&
+                        reminderDate.getFullYear() === now.getFullYear();
+
+        // Check if the reminder is for tomorrow
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const isTomorrow = reminderDate.getDate() === tomorrow.getDate() &&
+                          reminderDate.getMonth() === tomorrow.getMonth() &&
+                          reminderDate.getFullYear() === tomorrow.getFullYear();
+
+        // Create a more descriptive message
+        if (isToday) {
+            return `Next reminder: Today at ${reminderDate.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            })}`;
+        } else if (isTomorrow) {
+            return `Next reminder: Tomorrow at ${reminderDate.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            })}`;
+        } else {
+            return `Next reminder: ${formattedDate}`;
+        }
+    }, [nextReminder]);
 
     return (
         <Card variant="elevated" style={styles.container}>

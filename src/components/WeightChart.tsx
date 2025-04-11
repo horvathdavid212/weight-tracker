@@ -85,7 +85,7 @@ export default function WeightChart({ entries }: WeightChartProps) {
             // Only include goal line dataset if there are goal points
             ...(goalLine.length > 0 ? [{
                 data: goalLine,
-                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity * 0.7})`, // White with opacity
+                color: (opacity = 1) => `rgba(100, 100, 250, ${opacity * 0.7})`,
                 strokeWidth: 2,
                 strokeDashArray: [5, 5]
             }] : [])

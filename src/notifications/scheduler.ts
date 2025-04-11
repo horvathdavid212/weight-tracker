@@ -42,10 +42,34 @@ function computeNextReminder(frequency: string): Date | null {
         }
         next.setDate(1);
         return next;
+    } else if (frequency === 'now') {
+        // For 'now', schedule an immediate reminder
+        return new Date(now.getTime() + 5000); // 5 seconds from now
     }
-    // For "now" or unknown frequencies, we don't schedule a future reminder.
+    // For unknown frequencies, we don't schedule a future reminder.
     return null;
 }
+
+// Function to update the next reminder date in AsyncStorage
+export async function updateNextReminderDate(frequency: string) {
+    const nextReminderDate = computeNextReminder(frequency);
+    if (nextReminderDate) {
+        await AsyncStorage.setItem('nextReminder', nextReminderDate.toISOString());
+        console.log('Next reminder updated to:', nextReminderDate.toLocaleString());
+    } else {
+        await AsyncStorage.removeItem('nextReminder');
+        console.log('Next reminder cleared');
+    }
+    return nextReminderDate;
+}
+
+// Set up a notification listener to update the next reminder date when a notification is received
+Notifications.addNotificationReceivedListener(async () => {
+    const frequency = await AsyncStorage.getItem('reminderFrequency');
+    if (frequency && frequency !== 'disabled' && frequency !== 'now') {
+        await updateNextReminderDate(frequency);
+    }
+});
 
 export async function scheduleReminder(frequency: string | number) {
     // Convert to string if it's a number
@@ -62,12 +86,7 @@ export async function scheduleReminder(frequency: string | number) {
     await Notifications.cancelAllScheduledNotificationsAsync();
 
     // Compute and store the next reminder date.
-    const nextReminderDate = computeNextReminder(frequencyStr);
-    if (nextReminderDate) {
-        await AsyncStorage.setItem('nextReminder', nextReminderDate.toISOString());
-    } else {
-        await AsyncStorage.removeItem('nextReminder');
-    }
+    await updateNextReminderDate(frequencyStr);
 
     if (frequencyStr === 'disabled') {
         return; // Do not schedule any notifications.
