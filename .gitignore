@@ -3,6 +3,12 @@
 # dependencies
 node_modules/
 
+# IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
 # Expo
 .expo/
 dist/
@@ -16,21 +22,68 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
+*.apk
+*.aab
+*.ipa
 
 # Metro
 .metro-health-check*
+.metro-cache/
 
 # debug
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+debug.log
+*.log
 
 # macOS
 .DS_Store
 *.pem
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
 
 # local env files
-.env*.local
+.env
+.env.*
+!.env.example
 
 # typescript
 *.tsbuildinfo
+
+# testing
+coverage/
+__tests__/coverage/
+
+# build
+build/
+android/app/build/
+ios/build/
+*.hprof
+
+# Temporary files
+*.swp
+*.swo
+*~
+
+# Android
+android/.gradle
+android/app/debug
+android/app/release
+android/captures/
+android/local.properties
+android/*.hprof
+
+# iOS
+ios/Pods/
+ios/DerivedData/
+ios/.xcode.env.local
+xcuserdata/
+*.xcworkspace/
