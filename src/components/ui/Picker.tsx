@@ -12,7 +12,7 @@ interface PickerItem {
 interface PickerProps {
   label?: string;
   selectedValue: string | number;
-  onValueChange: (itemValue: any, itemIndex: number) => void;
+  onValueChange: (itemValue: string | number, itemIndex: number) => void;
   items: PickerItem[];
   containerStyle?: ViewStyle;
   error?: string;
@@ -40,7 +40,9 @@ const Picker: React.FC<PickerProps> = ({
           <View style={styles.androidPickerWrapper}>
             <RNPicker
               selectedValue={selectedValue}
-              onValueChange={onValueChange}
+              onValueChange={(itemValue, itemIndex) =>
+                onValueChange(itemValue as string | number, itemIndex)
+              }
               style={styles.picker}
               dropdownIconColor={colors.secondary.main}
               mode="dropdown"
@@ -99,7 +101,7 @@ const Picker: React.FC<PickerProps> = ({
             <RNPicker
               selectedValue={selectedValue}
               onValueChange={(value) => {
-                onValueChange(value, 0);
+                onValueChange(value as string | number, 0);
                 // Don't close modal on iOS as users expect to see the picker wheel
               }}
               style={styles.iosPicker}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Button, StyleSheet } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { WeightEntry } from '../types/WeightEntry';
+import { WeightDataService } from '../services/WeightDataService';
 
 interface DummyDataManagerProps {
     onDataChange: () => void;
@@ -9,29 +9,26 @@ interface DummyDataManagerProps {
 
 const DummyDataManager: React.FC<DummyDataManagerProps> = ({ onDataChange }) => {
     const dummyData: WeightEntry[] = [
-        { date: '2024-02-01T10:00:00.000Z', weight: 115.3 },
-        { date: '2024-02-08T10:00:00.000Z', weight: 114.5 },
-        { date: '2024-02-15T10:00:00.000Z', weight: 113.8 },
-        { date: '2024-02-22T10:00:00.000Z', weight: 113.1 },
+        { id: 'legacy-sample-1', date: '2024-02-01T10:00:00.000Z', weight: 115.3 },
+        { id: 'legacy-sample-2', date: '2024-02-08T10:00:00.000Z', weight: 114.5 },
+        { id: 'legacy-sample-3', date: '2024-02-15T10:00:00.000Z', weight: 113.8 },
+        { id: 'legacy-sample-4', date: '2024-02-22T10:00:00.000Z', weight: 113.1 },
     ];
 
     const addDummyData = async () => {
         try {
-            const existingData = await AsyncStorage.getItem('weightEntries');
-            const currentEntries: WeightEntry[] = existingData ? JSON.parse(existingData) : [];
-            
-            // Add dummy data only if it doesn't exist
+            const currentEntries = await WeightDataService.getEntries();
             const updatedEntries = [...currentEntries];
             for (const dummyEntry of dummyData) {
-                if (!currentEntries.some(entry => 
-                    entry.date === dummyEntry.date && 
+                if (!currentEntries.some(entry =>
+                    entry.date === dummyEntry.date &&
                     entry.weight === dummyEntry.weight
                 )) {
                     updatedEntries.push(dummyEntry);
                 }
             }
-            
-            await AsyncStorage.setItem('weightEntries', JSON.stringify(updatedEntries));
+
+            await WeightDataService.replaceEntries(updatedEntries);
             onDataChange();
         } catch (error) {
             console.error('Error adding dummy data:', error);
@@ -40,20 +37,15 @@ const DummyDataManager: React.FC<DummyDataManagerProps> = ({ onDataChange }) => 
 
     const clearDummyData = async () => {
         try {
-            const existingData = await AsyncStorage.getItem('weightEntries');
-            if (!existingData) return;
-
-            const currentEntries: WeightEntry[] = JSON.parse(existingData);
-            
-            // Remove only the dummy data entries
-            const filteredEntries = currentEntries.filter(entry => 
-                !dummyData.some(dummy => 
-                    dummy.date === entry.date && 
+            const currentEntries = await WeightDataService.getEntries();
+            const filteredEntries = currentEntries.filter(entry =>
+                !dummyData.some(dummy =>
+                    dummy.date === entry.date &&
                     dummy.weight === entry.weight
                 )
             );
-            
-            await AsyncStorage.setItem('weightEntries', JSON.stringify(filteredEntries));
+
+            await WeightDataService.replaceEntries(filteredEntries);
             onDataChange();
         } catch (error) {
             console.error('Error clearing dummy data:', error);

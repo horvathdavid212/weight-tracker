@@ -13,7 +13,7 @@ import { WeightEntry } from '../types/WeightEntry';
 import { useDebug } from '../context/DebugContext';
 import { Card, Text, Button } from './ui';
 import { colors, spacing, borderRadius } from '../theme';
-import { WeightDataService } from '../services/WeightDataService';
+import { generateWeightEntryId, WeightDataService } from '../services/WeightDataService';
 
 interface GlobalDebugPanelProps {
   onDataChange?: () => void;
@@ -24,35 +24,39 @@ const GlobalDebugPanel: React.FC<GlobalDebugPanelProps> = ({ onDataChange }) => 
   const [storageData, setStorageData] = useState<Array<readonly [string, string | null]>>([]);
   const [showStorageData, setShowStorageData] = useState(false);
 
-  // Dummy data for testing
+  const createRelativeDate = (daysAgo: number) => {
+    const date = new Date();
+    date.setHours(8, 0, 0, 0);
+    date.setDate(date.getDate() - daysAgo);
+    return date.toISOString();
+  };
+
   const dummyData: WeightEntry[] = [
-    { date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), weight: 75.3 },
-    { date: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(), weight: 74.8 },
-    { date: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(), weight: 74.2 },
-    { date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(), weight: 73.5 },
-    { date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), weight: 73.1 },
-    { date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), weight: 72.7 },
-    { date: new Date().toISOString(), weight: 72.0 },
+    { id: 'sample-30', date: createRelativeDate(30), weight: 75.3 },
+    { id: 'sample-25', date: createRelativeDate(25), weight: 74.8 },
+    { id: 'sample-20', date: createRelativeDate(20), weight: 74.2 },
+    { id: 'sample-15', date: createRelativeDate(15), weight: 73.5 },
+    { id: 'sample-10', date: createRelativeDate(10), weight: 73.1 },
+    { id: 'sample-5', date: createRelativeDate(5), weight: 72.7 },
+    { id: 'sample-0', date: createRelativeDate(0), weight: 72.0 },
   ];
 
-  // Add more dummy data with a trend
   const addDummyData = async () => {
     try {
-      const existingData = await AsyncStorage.getItem('weightEntries');
-      const currentEntries: WeightEntry[] = existingData ? JSON.parse(existingData) : [];
-
-      // Add dummy data only if it doesn't exist
+      const currentEntries = await WeightDataService.getEntries();
       const updatedEntries = [...currentEntries];
       for (const dummyEntry of dummyData) {
-        if (!currentEntries.some(entry =>
-          entry.date === dummyEntry.date &&
-          entry.weight === dummyEntry.weight
-        )) {
+        if (
+          !currentEntries.some(
+            (entry) =>
+              entry.date === dummyEntry.date && entry.weight === dummyEntry.weight
+          )
+        ) {
           updatedEntries.push(dummyEntry);
         }
       }
 
-      await AsyncStorage.setItem('weightEntries', JSON.stringify(updatedEntries));
+      await WeightDataService.replaceEntries(updatedEntries);
       if (onDataChange) onDataChange();
       Alert.alert('Success', 'Dummy data added successfully');
     } catch (error) {
@@ -61,7 +65,6 @@ const GlobalDebugPanel: React.FC<GlobalDebugPanelProps> = ({ onDataChange }) => 
     }
   };
 
-  // Clear all weight entries
   const clearAllData = async () => {
     try {
       await WeightDataService.clearAllEntries();
@@ -73,7 +76,6 @@ const GlobalDebugPanel: React.FC<GlobalDebugPanelProps> = ({ onDataChange }) => 
     }
   };
 
-  // Clear all AsyncStorage
   const clearAllStorage = async () => {
     Alert.alert(
       'Clear All Storage',
@@ -98,12 +100,11 @@ const GlobalDebugPanel: React.FC<GlobalDebugPanelProps> = ({ onDataChange }) => 
     );
   };
 
-  // View AsyncStorage contents
   const viewStorage = async () => {
     try {
       const keys = await AsyncStorage.getAllKeys();
       const stores = await AsyncStorage.multiGet(keys);
-      setStorageData([...stores]); // Convert readonly array to mutable array with spread operator
+      setStorageData([...stores]);
       setShowStorageData(true);
     } catch (error) {
       console.error('Error fetching AsyncStorage contents', error);
@@ -111,30 +112,28 @@ const GlobalDebugPanel: React.FC<GlobalDebugPanelProps> = ({ onDataChange }) => 
     }
   };
 
-  // Generate random weight entries for the past year
   const generateYearOfData = async () => {
     try {
       const yearData: WeightEntry[] = [];
       const today = new Date();
-      const startWeight = 80 + Math.random() * 10; // Random starting weight between 80-90kg
+      const startWeight = 80 + Math.random() * 10;
 
-      // Generate entries for the past year with a slight downward trend and some fluctuations
-      for (let i = 365; i >= 0; i -= 3) { // Every 3 days
+      for (let i = 365; i >= 0; i -= 3) {
         const entryDate = new Date();
         entryDate.setDate(today.getDate() - i);
 
-        // Create a downward trend with some random fluctuations
-        const progress = (365 - i) / 365; // 0 to 1 as we progress through the year
-        const trendWeight = startWeight - (progress * 10); // Lose 10kg over the year
-        const fluctuation = (Math.random() - 0.5) * 1.5; // Random fluctuation of ±0.75kg
+        const progress = (365 - i) / 365;
+        const trendWeight = startWeight - progress * 10;
+        const fluctuation = (Math.random() - 0.5) * 1.5;
 
         yearData.push({
+          id: generateWeightEntryId(),
           date: entryDate.toISOString(),
           weight: parseFloat((trendWeight + fluctuation).toFixed(1))
         });
       }
 
-      await AsyncStorage.setItem('weightEntries', JSON.stringify(yearData));
+      await WeightDataService.replaceEntries(yearData);
       if (onDataChange) onDataChange();
       Alert.alert('Success', 'A year of weight data generated successfully');
     } catch (error) {
@@ -143,7 +142,6 @@ const GlobalDebugPanel: React.FC<GlobalDebugPanelProps> = ({ onDataChange }) => 
     }
   };
 
-  // Floating button to toggle debug panel
   const FloatingButton = () => (
     <TouchableOpacity
       style={styles.floatingButton}
@@ -169,7 +167,7 @@ const GlobalDebugPanel: React.FC<GlobalDebugPanelProps> = ({ onDataChange }) => 
             <View style={styles.header}>
               <Text variant="h3" color={colors.secondary.main}>Debug Panel</Text>
               <TouchableOpacity onPress={hideDebugPanel} style={styles.closeButton}>
-                <RNText style={styles.closeButtonText}>×</RNText>
+                <RNText style={styles.closeButtonText}>X</RNText>
               </TouchableOpacity>
             </View>
 
@@ -247,7 +245,6 @@ const GlobalDebugPanel: React.FC<GlobalDebugPanelProps> = ({ onDataChange }) => 
         </View>
       </Modal>
 
-      {/* Modal to display AsyncStorage data */}
       <Modal
         visible={showStorageData}
         transparent={true}
@@ -262,7 +259,7 @@ const GlobalDebugPanel: React.FC<GlobalDebugPanelProps> = ({ onDataChange }) => 
                 onPress={() => setShowStorageData(false)}
                 style={styles.closeButton}
               >
-                <RNText style={styles.closeButtonText}>×</RNText>
+                <RNText style={styles.closeButtonText}>X</RNText>
               </TouchableOpacity>
             </View>
 

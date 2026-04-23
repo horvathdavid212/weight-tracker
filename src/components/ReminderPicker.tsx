@@ -1,34 +1,24 @@
-import React, {useState, useEffect} from 'react';
+import React from 'react';
 import {View, StyleSheet} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {scheduleReminder} from '../notifications/scheduler';
 import {Dropdown, Text} from './ui';
 import {colors, spacing} from '../theme';
+import {ReminderFrequency} from '../notifications/scheduler';
 
-const ReminderPicker: React.FC = () => {
-    const [reminderFrequency, setReminderFrequency] = useState<string | number>('disabled');
+interface ReminderPickerProps {
+    reminderFrequency: ReminderFrequency;
+    onValueChange: (value: ReminderFrequency) => void;
+}
 
-    useEffect(() => {
-        (async () => {
-            const value = await AsyncStorage.getItem('reminderFrequency');
-            if (value) setReminderFrequency(value);
-        })();
-    }, []);
-
-    const onValueChange = async (value: string | number) => {
-        // Ensure value is a string for AsyncStorage
-        const stringValue = value.toString();
-        setReminderFrequency(value); // Keep the original value type for the state
-        await AsyncStorage.setItem('reminderFrequency', stringValue);
-        await scheduleReminder(stringValue);
-    };
-
+const ReminderPicker: React.FC<ReminderPickerProps> = ({
+    reminderFrequency,
+    onValueChange,
+}) => {
     const reminderOptions = [
-        {label: "Disabled", value: "disabled"},
-        {label: "Now", value: "now"},
-        {label: "Daily", value: "daily"},
-        {label: "Weekly", value: "weekly"},
-        {label: "Monthly", value: "monthly"}
+        {label: 'Disabled', value: 'disabled'},
+        {label: 'Now', value: 'now'},
+        {label: 'Daily', value: 'daily'},
+        {label: 'Weekly', value: 'weekly'},
+        {label: 'Monthly', value: 'monthly'}
     ];
 
     return (
@@ -40,7 +30,7 @@ const ReminderPicker: React.FC = () => {
             <Dropdown
                 label="Reminder Frequency"
                 selectedValue={reminderFrequency}
-                onValueChange={onValueChange}
+                onValueChange={(value) => onValueChange(value as ReminderFrequency)}
                 items={reminderOptions}
             />
         </View>

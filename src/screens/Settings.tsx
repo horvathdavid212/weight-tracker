@@ -5,11 +5,59 @@ import ReminderPicker from '../components/ReminderPicker';
 import GoalCalculator from '../components/GoalCalculator';
 import { Container, Text, Card, Button } from '../components/ui';
 import { colors, spacing } from '../theme';
+import {
+    clearReminderSchedule,
+    isReminderFrequency,
+    REMINDER_FREQUENCY_KEY,
+    ReminderFrequency,
+    scheduleReminder,
+} from '../notifications/scheduler';
 
 const Settings: React.FC = () => {
+    const [reminderFrequency, setReminderFrequency] = React.useState<ReminderFrequency>('disabled');
+
+    React.useEffect(() => {
+        let isMounted = true;
+
+        const loadReminderFrequency = async () => {
+            try {
+                const storedFrequency = await AsyncStorage.getItem(REMINDER_FREQUENCY_KEY);
+                if (isMounted && isReminderFrequency(storedFrequency)) {
+                    setReminderFrequency(storedFrequency);
+                }
+            } catch (error) {
+                console.error('Error loading reminder settings:', error);
+            }
+        };
+
+        void loadReminderFrequency();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    const handleReminderChange = async (value: ReminderFrequency) => {
+        try {
+            setReminderFrequency(value);
+
+            if (value === 'disabled') {
+                await clearReminderSchedule();
+                return;
+            }
+
+            await AsyncStorage.setItem(REMINDER_FREQUENCY_KEY, value);
+            await scheduleReminder(value);
+        } catch (error) {
+            console.error('Error updating reminder settings:', error);
+            Alert.alert('Error', 'Failed to update reminder settings.');
+        }
+    };
+
     const clearReminderSettings = async () => {
         try {
-            await AsyncStorage.removeItem('reminderFrequency');
+            await clearReminderSchedule();
+            setReminderFrequency('disabled');
             Alert.alert('Success', 'Reminder settings cleared.');
         } catch (error) {
             console.error('Error clearing reminder settings:', error);
@@ -34,7 +82,10 @@ const Settings: React.FC = () => {
                 <Text variant="h3" color={colors.secondary.main} style={styles.sectionTitle}>
                     Reminder Settings
                 </Text>
-                <ReminderPicker />
+                <ReminderPicker
+                    reminderFrequency={reminderFrequency}
+                    onValueChange={handleReminderChange}
+                />
             </Card>
 
             <Card variant="elevated" style={{...styles.section, ...styles.otherCard}}>

@@ -36,6 +36,8 @@ const GoalCalculator: React.FC = () => {
                 setCurrentWeight(parsed.currentWeight.toString());
                 setGoalWeight(parsed.goalWeight.toString());
                 setWeightLossRate(parsed.weightLossRate);
+                setRecommendedDate(new Date(parsed.goalDate));
+                setDisplayedRate(parsed.weightLossRate);
             }
         } catch (error) {
             console.error('Error loading goal data:', error);

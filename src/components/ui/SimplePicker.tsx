@@ -12,7 +12,7 @@ interface PickerItem {
 interface SimplePickerProps {
   label?: string;
   selectedValue: string | number;
-  onValueChange: (itemValue: any, itemIndex: number) => void;
+  onValueChange: (itemValue: string | number, itemIndex: number) => void;
   items: PickerItem[];
 }
 
@@ -43,7 +43,9 @@ const SimplePicker: React.FC<SimplePickerProps> = ({
           <View style={styles.androidPickerWrapper}>
             <RNPicker
               selectedValue={selectedValue}
-              onValueChange={onValueChange}
+              onValueChange={(itemValue, itemIndex) =>
+                onValueChange(itemValue as string | number, itemIndex)
+              }
               style={styles.picker}
               dropdownIconColor={colors.secondary.main}
               mode="dropdown"
@@ -64,7 +66,9 @@ const SimplePicker: React.FC<SimplePickerProps> = ({
         {Platform.OS === 'ios' && (
           <RNPicker
             selectedValue={selectedValue}
-            onValueChange={onValueChange}
+            onValueChange={(itemValue, itemIndex) =>
+              onValueChange(itemValue as string | number, itemIndex)
+            }
             style={styles.picker}
             itemStyle={styles.iosPickerItem} // iOS specific item styling
           >

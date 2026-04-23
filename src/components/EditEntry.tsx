@@ -8,34 +8,34 @@ import {
     Platform,
     TouchableOpacity,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { WeightEntry } from '../types/WeightEntry';
 import { Button, Input, Text, Card } from './ui';
 import { colors, spacing, borderRadius } from '../theme';
 
 interface EditEntryProps {
     entry: WeightEntry;
-    index: number;
     visible: boolean;
-    onSave: (index: number, updatedEntry: WeightEntry) => void;
-    onDelete: (index: number) => void;
+    onSave: (updatedEntry: WeightEntry) => void;
+    onDelete: (id: string) => void;
     onCancel: () => void;
 }
 
-const EditEntry: React.FC<EditEntryProps> = ({ entry, index, visible, onSave, onDelete, onCancel }) => {
+const EditEntry: React.FC<EditEntryProps> = ({ entry, visible, onSave, onDelete, onCancel }) => {
     const [editedWeight, setEditedWeight] = useState(entry.weight.toString());
     const [editedDate, setEditedDate] = useState(new Date(entry.date));
     const [showDatePicker, setShowDatePicker] = useState(false);
 
     const saveEditedEntry = () => {
         const updatedEntry: WeightEntry = {
+            id: entry.id,
             weight: parseFloat(editedWeight),
             date: editedDate.toISOString(),
         };
-        onSave(index, updatedEntry);
+        onSave(updatedEntry);
     };
 
-    const onDateChange = (event: any, selectedDate?: Date) => {
+    const onDateChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
         setShowDatePicker(Platform.OS === 'ios');
         if (selectedDate) {
             setEditedDate(selectedDate);
@@ -106,7 +106,7 @@ const EditEntry: React.FC<EditEntryProps> = ({ entry, index, visible, onSave, on
 
                             <Button
                                 title="Delete Entry"
-                                onPress={() => onDelete(index)}
+                                onPress={() => onDelete(entry.id)}
                                 variant="tertiary"
                                 fullWidth
                                 style={styles.buttonContainer}

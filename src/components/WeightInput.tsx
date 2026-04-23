@@ -1,7 +1,7 @@
 import React, {useState, useMemo} from 'react';
 import {StyleSheet, Alert} from 'react-native';
 import {WeightEntry} from '../types/WeightEntry';
-import {WeightDataService} from '../services/WeightDataService';
+import {generateWeightEntryId, WeightDataService} from '../services/WeightDataService';
 import {Card, Input, Button, Text} from './ui';
 import {colors, spacing} from '../theme';
 import {useNextReminder} from '../hooks/useNextReminder';
@@ -25,6 +25,7 @@ const WeightInput: React.FC<WeightInputProps> = ({onNewEntry}) => {
         }
 
         const newEntry: WeightEntry = {
+            id: generateWeightEntryId(),
             date: new Date().toISOString(),
             weight: parsedWeight,
         };

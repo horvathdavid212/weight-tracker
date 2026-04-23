@@ -1,4 +1,7 @@
 export interface WeightEntry {
-    date: string;  // ISO string
-    weight: number;
+  id: string;
+  date: string;
+  weight: number;
 }
+
+export type StoredWeightEntry = WeightEntry | Omit<WeightEntry, 'id'>;

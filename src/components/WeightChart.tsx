@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Dimensions, StyleSheet } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { WeightEntry } from '../types/WeightEntry';
@@ -19,70 +19,90 @@ type WeightChartProps = {
 
 export default function WeightChart({ entries }: WeightChartProps) {
     const [goalLine, setGoalLine] = useState<number[]>([]);
-    const [goalDates, setGoalDates] = useState<string[]>([]);
 
-    useEffect(() => {
-        loadGoalData();
-    }, [entries]);
+    const chartEntries = useMemo(
+        () =>
+            [...entries]
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                .slice(0, 7)
+                .reverse(),
+        [entries]
+    );
 
-    const loadGoalData = async () => {
+    const chartLabels = useMemo(
+        () =>
+            chartEntries.map((entry, index) => {
+                const date = new Date(entry.date);
+                const shortLabel = `${String(date.getMonth() + 1).padStart(2, '0')}/${String(
+                    date.getDate()
+                ).padStart(2, '0')}`;
+
+                if (chartEntries.length > 5 && index % 2 === 1 && index !== chartEntries.length - 1) {
+                    return '';
+                }
+
+                return shortLabel;
+            }),
+        [chartEntries]
+    );
+
+    const loadGoalData = useCallback(async () => {
+        if (chartEntries.length < 2) {
+            setGoalLine([]);
+            return;
+        }
+
         try {
             const goalDataStr = await AsyncStorage.getItem('goalData');
             if (!goalDataStr) {
-                // Clear goal line if no goal data exists
                 setGoalLine([]);
-                setGoalDates([]);
                 return;
             }
 
-            if (goalDataStr && entries.length >= 2) {
-                const goalData: GoalData = JSON.parse(goalDataStr);
+            const goalData: GoalData = JSON.parse(goalDataStr);
+            const startDate = new Date(chartEntries[0].date);
+            const endDate = new Date(goalData.goalDate);
+            const totalDuration = endDate.getTime() - startDate.getTime();
 
-                // Calculate points for goal line
-                const startDate = new Date(entries[entries.length - 1].date);
-                const endDate = new Date(goalData.goalDate);
-                const totalDays = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
-                const weightDiff = goalData.goalWeight - goalData.currentWeight;
-                const dailyLoss = weightDiff / totalDays;
-
-                // Generate 7 points for the goal line
-                const points: number[] = [];
-                const dates: string[] = [];
-                for (let i = 0; i < 7; i++) {
-                    const date = new Date(startDate);
-                    date.setDate(date.getDate() + (i * totalDays / 6));
-                    const weight = goalData.currentWeight + (dailyLoss * (i * totalDays / 6));
-                    points.push(weight);
-                    dates.push(date.toISOString().split('T')[0]);
-                }
-
-                setGoalLine(points);
-                setGoalDates(dates);
+            if (Number.isNaN(totalDuration) || totalDuration <= 0) {
+                setGoalLine([]);
+                return;
             }
+
+            const points = chartEntries.map((entry) => {
+                const pointDate = new Date(entry.date);
+                const progress = Math.min(
+                    Math.max((pointDate.getTime() - startDate.getTime()) / totalDuration, 0),
+                    1
+                );
+
+                return (
+                    goalData.currentWeight +
+                    (goalData.goalWeight - goalData.currentWeight) * progress
+                );
+            });
+
+            setGoalLine(points);
         } catch (error) {
             console.error('Error loading goal data:', error);
-            // Clear goal line on error
             setGoalLine([]);
-            setGoalDates([]);
         }
-    };
+    }, [chartEntries]);
+
+    useEffect(() => {
+        void loadGoalData();
+    }, [loadGoalData]);
 
     if (entries.length < 2) return null;
 
-    // Take the last 7 entries but maintain chronological order
-    const chartEntries = entries.slice(-7).sort((a, b) =>
-        new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
-
     const data = {
-        labels: chartEntries.map(e => e.date.split('T')[0]),
+        labels: chartLabels,
         datasets: [
             {
                 data: chartEntries.map(e => e.weight),
-                color: (opacity = 1) => `rgba(57, 255, 20, ${opacity})`, // Neon green
+                color: (opacity = 1) => `rgba(57, 255, 20, ${opacity})`,
                 strokeWidth: 3
             },
-            // Only include goal line dataset if there are goal points
             ...(goalLine.length > 0 ? [{
                 data: goalLine,
                 color: (opacity = 1) => `rgba(100, 100, 250, ${opacity * 0.7})`,
@@ -108,6 +128,9 @@ export default function WeightChart({ entries }: WeightChartProps) {
                     decimalPlaces: 1,
                     color: (opacity = 1) => `rgba(170, 170, 170, ${opacity})`,
                     labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                    propsForLabels: {
+                        fontSize: 10,
+                    },
                     propsForDots: {
                         r: '6',
                         strokeWidth: '2',

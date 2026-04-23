@@ -4,6 +4,7 @@ import {
   TextInput,
   Text,
   StyleSheet,
+  StyleProp,
   TextInputProps,
   ViewStyle,
 } from 'react-native';
@@ -12,7 +13,7 @@ import { colors, typography, spacing, borderRadius } from '../../theme';
 interface InputProps extends TextInputProps {
   label?: string;
   error?: string;
-  containerStyle?: ViewStyle;
+  containerStyle?: StyleProp<ViewStyle>;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
 }
@@ -28,14 +29,14 @@ const Input: React.FC<InputProps> = ({
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
-  const handleFocus = (e: any) => {
+  const handleFocus: NonNullable<TextInputProps['onFocus']> = (e) => {
     setIsFocused(true);
     if (rest.onFocus) {
       rest.onFocus(e);
     }
   };
 
-  const handleBlur = (e: any) => {
+  const handleBlur: NonNullable<TextInputProps['onBlur']> = (e) => {
     setIsFocused(false);
     if (rest.onBlur) {
       rest.onBlur(e);
@@ -43,23 +44,17 @@ const Input: React.FC<InputProps> = ({
   };
 
   return (
-    <View style={{...styles.container, ...containerStyle}}>
+    <View style={[styles.container, containerStyle]}>
       {label && <Text style={styles.label}>{label}</Text>}
-      <View
-        style={{
-          ...styles.inputContainer,
-          ...(isFocused ? styles.focused : {}),
-          ...(error ? styles.error : {}),
-        }}
-      >
+      <View style={[styles.inputContainer, isFocused && styles.focused, Boolean(error) && styles.error]}>
         {leftIcon && <View style={styles.iconLeft}>{leftIcon}</View>}
         <TextInput
-          style={{
-            ...styles.input,
-            ...(leftIcon ? styles.inputWithLeftIcon : {}),
-            ...(rightIcon ? styles.inputWithRightIcon : {}),
-            ...style,
-          }}
+          style={[
+            styles.input,
+            Boolean(leftIcon) && styles.inputWithLeftIcon,
+            Boolean(rightIcon) && styles.inputWithRightIcon,
+            style,
+          ]}
           placeholderTextColor={colors.text.hint}
           onFocus={handleFocus}
           onBlur={handleBlur}

@@ -10,8 +10,16 @@ import GlobalDebugPanel from './src/components/GlobalDebugPanel';
 
 import HomeScreen from './src/screens/HomeScreen';
 import Settings from './src/screens/Settings';
+import { RootStackParamList } from './src/types/navigation';
 
-const Stack = createStackNavigator();
+type GlobalErrorHandler = (error: Error, isFatal?: boolean) => void;
+
+interface ErrorUtilsLike {
+    getGlobalHandler?: () => GlobalErrorHandler;
+    setGlobalHandler: (handler: GlobalErrorHandler) => void;
+}
+
+const Stack = createStackNavigator<RootStackParamList>();
 
 // Ignore specific warnings that might not be relevant
 LogBox.ignoreLogs([
@@ -20,30 +28,31 @@ LogBox.ignoreLogs([
 
 export default function App() {
     const [error, setError] = useState<Error | null>(null);
+    const [dataVersion, setDataVersion] = useState(0);
 
     const handleDataChange = () => {
-        // This function will be passed to the GlobalDebugPanel
-        // We need to refresh the HomeScreen when data changes
-        // We'll use a navigation event to trigger a refresh
-        // The HomeScreen will listen for the 'focus' event and reload data
+        setDataVersion((currentVersion) => currentVersion + 1);
     };
 
     // Add global error handler
     useEffect(() => {
-        const errorHandler = (error: Error) => {
-            console.log('Global error caught:', error);
-            setError(error);
-        };
+        const errorUtils = (
+            globalThis as typeof globalThis & { ErrorUtils?: ErrorUtilsLike }
+        ).ErrorUtils;
+        if (errorUtils) {
+            const previousHandler = errorUtils.getGlobalHandler?.();
+            const errorHandler: GlobalErrorHandler = (caughtError, isFatal) => {
+                console.log('Global error caught:', caughtError);
+                setError(caughtError);
+                previousHandler?.(caughtError, isFatal);
+            };
 
-        // Set up global error handler
-        // Use type assertion for ErrorUtils which exists in React Native but isn't in the TypeScript types
-        const ErrorUtils = (global as any).ErrorUtils;
-        if (ErrorUtils) {
-            const subscription = ErrorUtils.setGlobalHandler(errorHandler);
+            errorUtils.setGlobalHandler(errorHandler);
 
             return () => {
-                // Clean up error handler on unmount
-                ErrorUtils.setGlobalHandler(subscription);
+                if (previousHandler) {
+                    errorUtils.setGlobalHandler(previousHandler);
+                }
             };
         }
     }, []);
@@ -93,7 +102,6 @@ export default function App() {
                     >
                         <Stack.Screen
                             name="Home"
-                            component={HomeScreen}
                             options={({ navigation }) => ({
                                 title: 'Weight Tracker',
                                 headerRight: () => (
@@ -105,7 +113,9 @@ export default function App() {
                                     />
                                 ),
                             })}
-                        />
+                        >
+                            {(props) => <HomeScreen {...props} dataVersion={dataVersion} />}
+                        </Stack.Screen>
                         <Stack.Screen
                             name="Settings"
                             component={Settings}
@@ -113,7 +123,7 @@ export default function App() {
                         />
                     </Stack.Navigator>
                 </NavigationContainer>
-                <GlobalDebugPanel onDataChange={handleDataChange} />
+                {__DEV__ ? <GlobalDebugPanel onDataChange={handleDataChange} /> : null}
             </GestureHandlerRootView>
         </DebugProvider>
     );

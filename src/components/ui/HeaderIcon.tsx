@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '../../theme';
 
 interface HeaderIconProps {
-  iconName: string;
+  iconName: React.ComponentProps<typeof Ionicons>['name'];
   size?: number;
   color?: string;
   onPress: () => void;

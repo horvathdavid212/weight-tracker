@@ -9,28 +9,20 @@ import { WeightDataService } from '../services/WeightDataService';
 import { Container } from '../components/ui';
 import { colors, spacing } from '../theme';
 
-import { StackNavigationProp } from '@react-navigation/stack';
+import { StackScreenProps } from '@react-navigation/stack';
 import { useFocusEffect } from '@react-navigation/native';
-// Debug panel is now global
+import { RootStackParamList } from '../types/navigation';
 
-type RootStackParamList = {
-    Home: undefined;
-    Settings: undefined;
-};
-
-type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
-
-interface HomeScreenProps {
-    navigation: HomeScreenNavigationProp;
+interface HomeScreenProps extends StackScreenProps<RootStackParamList, 'Home'> {
+    dataVersion: number;
 }
 
-const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
+const HomeScreen: React.FC<HomeScreenProps> = ({ dataVersion }) => {
     const [entries, setEntries] = useState<WeightEntry[]>([]);
-    const [selectedEntryIndex, setSelectedEntryIndex] = useState<number | null>(null);
     const [editingEntry, setEditingEntry] = useState<WeightEntry | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
-    const loadEntries = async () => {
+    const loadEntries = React.useCallback(async () => {
         setIsLoading(true);
         try {
             const data = await WeightDataService.getEntries();
@@ -40,58 +32,48 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         } finally {
             setIsLoading(false);
         }
-    };
-
-    // Load entries when component mounts
-    useEffect(() => {
-        loadEntries();
     }, []);
 
-    // Reload entries when screen comes into focus (for debug panel updates)
+    useEffect(() => {
+        void loadEntries();
+    }, [dataVersion, loadEntries]);
+
     useFocusEffect(
         React.useCallback(() => {
-            loadEntries();
-        }, [])
+            void loadEntries();
+        }, [loadEntries])
     );
 
-    const handleNewEntry = (entry: WeightEntry) => {
-        // Update UI immediately for better UX
-        const updatedEntries = [entry, ...entries];
-        setEntries(updatedEntries);
+    const handleNewEntry = (_entry: WeightEntry) => {
+        void loadEntries();
     };
 
-    const handleSelectEntry = (index: number, entry: WeightEntry) => {
-        setSelectedEntryIndex(index);
+    const handleSelectEntry = (entry: WeightEntry) => {
         setEditingEntry(entry);
     };
 
-    const handleUpdateEntry = async (index: number, updatedEntry: WeightEntry) => {
+    const handleUpdateEntry = async (updatedEntry: WeightEntry) => {
         try {
-            const success = await WeightDataService.updateEntry(index, updatedEntry);
+            const success = await WeightDataService.updateEntry(updatedEntry.id, updatedEntry);
             if (success) {
-                const updatedEntries = [...entries];
-                updatedEntries[index] = updatedEntry;
-                setEntries(updatedEntries);
+                await loadEntries();
             }
         } catch (error) {
             console.error('Error updating entry:', error);
         } finally {
-            setSelectedEntryIndex(null);
             setEditingEntry(null);
         }
     };
 
-    const handleDeleteEntry = async (index: number) => {
+    const handleDeleteEntry = async (id: string) => {
         try {
-            const success = await WeightDataService.deleteEntry(index);
+            const success = await WeightDataService.deleteEntry(id);
             if (success) {
-                const updatedEntries = entries.filter((_, i) => i !== index);
-                setEntries(updatedEntries);
+                await loadEntries();
             }
         } catch (error) {
             console.error('Error deleting entry:', error);
         } finally {
-            setSelectedEntryIndex(null);
             setEditingEntry(null);
         }
     };
@@ -116,15 +98,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 </>
             )}
 
-            {selectedEntryIndex !== null && editingEntry && (
+            {editingEntry && (
                 <EditEntry
                     entry={editingEntry}
-                    index={selectedEntryIndex}
                     visible={true}
                     onSave={handleUpdateEntry}
                     onDelete={handleDeleteEntry}
                     onCancel={() => {
-                        setSelectedEntryIndex(null);
                         setEditingEntry(null);
                     }}
                 />

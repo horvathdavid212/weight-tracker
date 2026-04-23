@@ -1,40 +1,63 @@
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SchedulableTriggerInputTypes } from 'expo-notifications';
+import { Alert } from 'react-native';
 
-// Configure how notifications are handled.
+export const REMINDER_FREQUENCY_KEY = 'reminderFrequency';
+export const NEXT_REMINDER_KEY = 'nextReminder';
+
+export type ReminderFrequency =
+    | 'disabled'
+    | 'now'
+    | 'daily'
+    | 'weekly'
+    | 'monthly';
+
+export function isReminderFrequency(value: string | null): value is ReminderFrequency {
+    return (
+        value === 'disabled' ||
+        value === 'now' ||
+        value === 'daily' ||
+        value === 'weekly' ||
+        value === 'monthly'
+    );
+}
+
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
         shouldShowAlert: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
         shouldPlaySound: false,
         shouldSetBadge: false,
     }),
 });
 
-// Helper function to compute the next reminder date based on frequency.
-function computeNextReminder(frequency: string): Date | null {
+function computeNextReminder(frequency: ReminderFrequency): Date | null {
     const now = new Date();
+
     if (frequency === 'daily') {
-        // Schedule for today at 12:00 pm if in the future, otherwise tomorrow at 12:00 pm.
         const next = new Date(now);
         next.setHours(12, 0, 0, 0);
         if (now >= next) {
             next.setDate(next.getDate() + 1);
         }
         return next;
-    } else if (frequency === 'weekly') {
-        // Schedule for the upcoming Sunday at 12:00 pm.
+    }
+
+    if (frequency === 'weekly') {
         const next = new Date(now);
         next.setHours(12, 0, 0, 0);
-        const currentDay = now.getDay(); // Sunday = 0, Monday = 1, ..., Saturday = 6
+        const currentDay = now.getDay();
         let daysUntilSunday = (7 - currentDay) % 7;
         if (daysUntilSunday === 0 && now >= next) {
             daysUntilSunday = 7;
         }
         next.setDate(next.getDate() + daysUntilSunday);
         return next;
-    } else if (frequency === 'monthly') {
-        // Schedule for the 1st of next month at 12:00 pm.
+    }
+
+    if (frequency === 'monthly') {
         const next = new Date(now);
         next.setHours(12, 0, 0, 0);
         if (now.getDate() > 1 || (now.getDate() === 1 && now >= next)) {
@@ -42,77 +65,82 @@ function computeNextReminder(frequency: string): Date | null {
         }
         next.setDate(1);
         return next;
-    } else if (frequency === 'now') {
-        // For 'now', schedule an immediate reminder
-        return new Date(now.getTime() + 5000); // 5 seconds from now
     }
-    // For unknown frequencies, we don't schedule a future reminder.
+
+    if (frequency === 'now') {
+        return new Date(now.getTime() + 5000);
+    }
+
     return null;
 }
 
-// Function to update the next reminder date in AsyncStorage
-export async function updateNextReminderDate(frequency: string) {
+export async function updateNextReminderDate(frequency: ReminderFrequency) {
     const nextReminderDate = computeNextReminder(frequency);
     if (nextReminderDate) {
-        await AsyncStorage.setItem('nextReminder', nextReminderDate.toISOString());
+        await AsyncStorage.setItem(NEXT_REMINDER_KEY, nextReminderDate.toISOString());
         console.log('Next reminder updated to:', nextReminderDate.toLocaleString());
     } else {
-        await AsyncStorage.removeItem('nextReminder');
+        await AsyncStorage.removeItem(NEXT_REMINDER_KEY);
         console.log('Next reminder cleared');
     }
+
     return nextReminderDate;
 }
 
-// Set up a notification listener to update the next reminder date when a notification is received
+export async function clearReminderSchedule() {
+    await Notifications.cancelAllScheduledNotificationsAsync();
+    await AsyncStorage.multiRemove([REMINDER_FREQUENCY_KEY, NEXT_REMINDER_KEY]);
+}
+
 Notifications.addNotificationReceivedListener(async () => {
-    const frequency = await AsyncStorage.getItem('reminderFrequency');
-    if (frequency && frequency !== 'disabled' && frequency !== 'now') {
+    const frequency = await AsyncStorage.getItem(REMINDER_FREQUENCY_KEY);
+    if (isReminderFrequency(frequency) && frequency !== 'disabled' && frequency !== 'now') {
         await updateNextReminderDate(frequency);
-    }
-});
-
-export async function scheduleReminder(frequency: string | number) {
-    // Convert to string if it's a number
-    const frequencyStr = typeof frequency === 'number' ? frequency.toString() : frequency;
-    const { status } = await Notifications.requestPermissionsAsync();
-    console.log('Schedule reminder', frequencyStr);
-
-    if (status !== 'granted') {
-        alert('Permission not granted for notifications');
         return;
     }
 
-    // Clear any existing notifications.
-    await Notifications.cancelAllScheduledNotificationsAsync();
-
-    // Compute and store the next reminder date.
-    await updateNextReminderDate(frequencyStr);
-
-    if (frequencyStr === 'disabled') {
-        return; // Do not schedule any notifications.
+    if (frequency === 'now') {
+        await AsyncStorage.removeItem(NEXT_REMINDER_KEY);
     }
+});
+
+export async function scheduleReminder(frequency: ReminderFrequency) {
+    if (frequency === 'disabled') {
+        await clearReminderSchedule();
+        return;
+    }
+
+    const { status } = await Notifications.requestPermissionsAsync();
+    console.log('Schedule reminder', frequency);
+
+    if (status !== 'granted') {
+        await AsyncStorage.removeItem(NEXT_REMINDER_KEY);
+        Alert.alert('Permissions Required', 'Permission not granted for notifications.');
+        return;
+    }
+
+    await Notifications.cancelAllScheduledNotificationsAsync();
+    await updateNextReminderDate(frequency);
 
     let trigger: Notifications.NotificationTriggerInput;
 
-    if (frequencyStr === 'daily') {
+    if (frequency === 'daily') {
         trigger = {
             type: SchedulableTriggerInputTypes.DAILY,
             hour: 12,
             minute: 0,
         };
-    } else if (frequencyStr === 'now') {
-        // "Now" can be interpreted as an immediate notification.
+    } else if (frequency === 'now') {
         trigger = null;
-    } else if (frequencyStr === 'weekly') {
+    } else if (frequency === 'weekly') {
         trigger = {
             type: SchedulableTriggerInputTypes.CALENDAR,
-            // Note: Expo's notifications may expect Sunday as 1 instead of 0.
             weekday: 1,
             hour: 12,
             minute: 0,
             repeats: true,
         };
-    } else if (frequencyStr === 'monthly') {
+    } else {
         trigger = {
             type: SchedulableTriggerInputTypes.CALENDAR,
             day: 1,
@@ -120,14 +148,11 @@ export async function scheduleReminder(frequency: string | number) {
             minute: 0,
             repeats: true,
         };
-    } else {
-        console.warn(`Unknown reminder frequency: ${frequencyStr}`);
-        return;
     }
 
     await Notifications.scheduleNotificationAsync({
         content: {
-            title: "⏰ Weight Reminder",
+            title: 'Weight Reminder',
             body: "Don't forget to log your weight today!",
         },
         trigger,
