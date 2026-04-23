@@ -30,8 +30,4 @@ Track your body weight, visualize your progress, and stay consistent with smart 
 - [ ] BMI calculation and target tracking  
 - [ ] Data export (CSV)  
 - [ ] Cloud sync & backup  
-- [ ] Dark mode  
-
----
-
-> Built as a learning project to master React Native development and improve personal health.
+- [ ] Dark mode 
