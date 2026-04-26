@@ -29,6 +29,10 @@ Track your body weight, visualize your progress, and stay consistent with smart 
     <td align="center">
       <img width="922" height="2048" alt="ca7bd48b-aa33-4ea6-bfca-5b05dbb7ba38" src="https://github.com/user-attachments/assets/d5d75323-039b-459b-853e-48cab8bffe88" /><br />
     </td>
+    <td align="center">
+      <img width="922" height="2048" alt="b990ea36-e17b-4b8a-8cf9-16e19e5e897a" src="https://github.com/user-attachments/assets/692097b7-cf13-4c6b-b296-2e1f0ea4638b" /><br />
+    </td>
+
   </tr>
 </table>
 
