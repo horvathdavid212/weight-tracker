@@ -3,15 +3,13 @@ import {
     Alert,
     View,
     StyleSheet,
-    Modal,
-    TouchableWithoutFeedback,
     Keyboard,
     Platform,
     TouchableOpacity,
 } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { WeightEntry } from '../types/WeightEntry';
-import { Button, Input, Text, Card } from './ui';
+import { AppModal, Button, FormActions, Input, ModalHeader, Text } from './ui';
 import { colors, spacing, borderRadius } from '../theme';
 import { formatLongDate } from '../utils/dateFormat';
 import { parseAndValidateWeightInput } from '../utils/weightValidation';
@@ -53,103 +51,91 @@ const EditEntry: React.FC<EditEntryProps> = ({ entry, visible, onSave, onDelete,
     };
 
     return (
-        <Modal
+        <AppModal
             visible={visible}
             animationType="fade"
-            transparent={true}
             onRequestClose={onCancel}
+            dismissOnBackdropPress={false}
+            dismissKeyboardOnBackdropPress
+            panelStyle={styles.modalContainer}
         >
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <View style={styles.modalOverlay}>
-                    <Card variant="elevated" style={styles.modalContainer}>
-                        <Text variant="h3" color={colors.secondary.main} style={styles.header}>
-                            Edit Entry
+            <ModalHeader title="Edit Entry" titleAlign="center" style={styles.header} />
+
+            <View style={styles.content}>
+                <Input
+                    label="Weight (kg)"
+                    value={editedWeight}
+                    onChangeText={setEditedWeight}
+                    placeholder="Enter weight"
+                    keyboardType="numeric"
+                    containerStyle={styles.inputGroup}
+                />
+
+                <View style={styles.inputGroup}>
+                    <Text variant="label">Date</Text>
+                    <TouchableOpacity
+                        onPress={() => setShowDatePicker(true)}
+                        style={styles.dateButton}
+                    >
+                        <Text style={styles.dateButtonText}>
+                            {formatLongDate(editedDate)}
                         </Text>
-
-                        <Input
-                            label="Weight (kg)"
-                            value={editedWeight}
-                            onChangeText={setEditedWeight}
-                            placeholder="Enter weight"
-                            keyboardType="numeric"
-                            containerStyle={styles.inputGroup}
-                        />
-
-                        <View style={styles.inputGroup}>
-                            <Text variant="label">Date</Text>
-                            <TouchableOpacity
-                                onPress={() => setShowDatePicker(true)}
-                                style={styles.dateButton}
-                            >
-                                <Text style={styles.dateButtonText}>
-                                    {formatLongDate(editedDate)}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        {showDatePicker && (
-                            <DateTimePicker
-                                value={editedDate}
-                                mode="date"
-                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                onChange={onDateChange}
-                                maximumDate={new Date()}
-                            />
-                        )}
-
-                        <View style={styles.buttonGroup}>
-                            <Button
-                                title="Save Changes"
-                                onPress={saveEditedEntry}
-                                variant="secondary"
-                                fullWidth
-                                style={styles.buttonContainer}
-                            />
-
-                            <Button
-                                title="Delete Entry"
-                                onPress={() => onDelete(entry.id)}
-                                variant="tertiary"
-                                fullWidth
-                                style={styles.buttonContainer}
-                            />
-
-                            <Button
-                                title="Cancel"
-                                onPress={onCancel}
-                                variant="outline"
-                                fullWidth
-                                style={styles.buttonContainer}
-                            />
-                        </View>
-                    </Card>
+                    </TouchableOpacity>
                 </View>
-            </TouchableWithoutFeedback>
-        </Modal>
+
+                {showDatePicker && (
+                    <DateTimePicker
+                        value={editedDate}
+                        mode="date"
+                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                        onChange={onDateChange}
+                        maximumDate={new Date()}
+                    />
+                )}
+
+                <FormActions style={styles.buttonGroup}>
+                    <Button
+                        title="Save Changes"
+                        onPress={saveEditedEntry}
+                        variant="secondary"
+                        fullWidth
+                    />
+
+                    <Button
+                        title="Delete Entry"
+                        onPress={() => onDelete(entry.id)}
+                        variant="tertiary"
+                        fullWidth
+                    />
+
+                    <Button
+                        title="Cancel"
+                        onPress={onCancel}
+                        variant="outline"
+                        fullWidth
+                    />
+                </FormActions>
+            </View>
+        </AppModal>
     );
 };
 
 const styles = StyleSheet.create({
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.8)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: spacing.md,
-    },
     modalContainer: {
         width: '100%',
         maxWidth: 400,
         backgroundColor: colors.background.paper,
-        borderRadius: borderRadius.md,
-        paddingVertical: spacing.lg,
-        paddingHorizontal: spacing.md,
         borderLeftWidth: 4,
         borderLeftColor: colors.secondary.main,
     },
     header: {
-        marginBottom: spacing.md,
-        textAlign: 'center',
+        paddingTop: spacing.lg,
+        paddingBottom: 0,
+    },
+    content: {
+        paddingHorizontal: spacing.md,
+        paddingBottom: spacing.lg,
+        paddingTop: spacing.md,
     },
     inputGroup: {
         marginBottom: spacing.md,
@@ -167,9 +153,6 @@ const styles = StyleSheet.create({
     },
     buttonGroup: {
         marginTop: spacing.md,
-    },
-    buttonContainer: {
-        marginTop: spacing.sm,
     },
 });
 

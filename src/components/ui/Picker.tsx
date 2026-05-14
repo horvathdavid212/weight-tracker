@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ViewStyle, Platform, TouchableOpacity, Modal } from 'react-native';
+import { Platform, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { Picker as RNPicker } from '@react-native-picker/picker';
-import { colors, spacing, borderRadius } from '../../theme';
+import { Ionicons } from '@expo/vector-icons';
+import { borderRadius, colors, spacing } from '../../theme';
+import AppModal from './AppModal';
+import ModalHeader from './ModalHeader';
 import Text from './Text';
 
 interface PickerItem {
@@ -27,16 +30,13 @@ const Picker: React.FC<PickerProps> = ({
   error,
 }) => {
   const [modalVisible, setModalVisible] = useState(false);
+  const selectedItem = items.find((item) => item.value === selectedValue);
 
-  // Find the selected item to display its label
-  const selectedItem = items.find(item => item.value === selectedValue);
-
-  // Android uses the native picker which works fine with our styling
   if (Platform.OS === 'android') {
     return (
-      <View style={{...styles.container, ...containerStyle}}>
-        {label && <Text variant="label">{label}</Text>}
-        <View style={{...styles.pickerContainer, ...(error ? styles.errorBorder : {})}}>
+      <View style={{ ...styles.container, ...containerStyle }}>
+        {label ? <Text variant="label">{label}</Text> : null}
+        <View style={{ ...styles.pickerContainer, ...(error ? styles.errorBorder : {}) }}>
           <View style={styles.androidPickerWrapper}>
             <RNPicker
               selectedValue={selectedValue}
@@ -56,70 +56,72 @@ const Picker: React.FC<PickerProps> = ({
                 />
               ))}
             </RNPicker>
-            <Text style={{...styles.dropdownIcon, ...styles.androidDropdownIcon}}>▼</Text>
+            <Ionicons
+              name="chevron-down"
+              size={16}
+              color={colors.secondary.main}
+              style={styles.androidDropdownIcon}
+            />
           </View>
         </View>
-        {error && <Text style={styles.errorText}>{error}</Text>}
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </View>
     );
   }
 
-  // iOS needs a custom implementation for better visibility in dark mode
   return (
-    <View style={{...styles.container, ...containerStyle}}>
-      {label && <Text variant="label">{label}</Text>}
+    <View style={{ ...styles.container, ...containerStyle }}>
+      {label ? <Text variant="label">{label}</Text> : null}
       <TouchableOpacity
-        style={{...styles.pickerContainer, ...(error ? styles.errorBorder : {})}}
+        style={{ ...styles.pickerContainer, ...(error ? styles.errorBorder : {}) }}
         onPress={() => setModalVisible(true)}
       >
         <View style={styles.pickerContent}>
           <Text style={styles.selectedText}>
             {selectedItem ? selectedItem.label : 'Select an option'}
           </Text>
-          <Text style={styles.dropdownIcon}>▼</Text>
+          <Ionicons name="chevron-down" size={16} color={colors.secondary.main} />
         </View>
       </TouchableOpacity>
 
-      <Modal
-        animationType="slide"
-        transparent={true}
+      <AppModal
         visible={modalVisible}
+        animationType="slide"
         onRequestClose={() => setModalVisible(false)}
+        presentation="bottom"
+        panelStyle={styles.modalContent}
       >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setModalVisible(false)}
+        <ModalHeader
+          title={label ?? 'Select an option'}
+          showDivider
+          rightContent={(
+            <TouchableOpacity onPress={() => setModalVisible(false)} activeOpacity={0.7}>
+              <Text color={colors.secondary.main} style={styles.doneButton}>
+                Done
+              </Text>
+            </TouchableOpacity>
+          )}
+        />
+
+        <RNPicker
+          selectedValue={selectedValue}
+          onValueChange={(value) => {
+            onValueChange(value as string | number, 0);
+          }}
+          style={styles.iosPicker}
         >
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Text color={colors.secondary.main} style={styles.doneButton}>Done</Text>
-              </TouchableOpacity>
-            </View>
+          {items.map((item) => (
+            <RNPicker.Item
+              key={item.value.toString()}
+              label={item.label}
+              value={item.value}
+              color="#000000"
+            />
+          ))}
+        </RNPicker>
+      </AppModal>
 
-            <RNPicker
-              selectedValue={selectedValue}
-              onValueChange={(value) => {
-                onValueChange(value as string | number, 0);
-                // Don't close modal on iOS as users expect to see the picker wheel
-              }}
-              style={styles.iosPicker}
-            >
-              {items.map((item) => (
-                <RNPicker.Item
-                  key={item.value.toString()}
-                  label={item.label}
-                  value={item.value}
-                  color="#000000" // Black text for iOS picker
-                />
-              ))}
-            </RNPicker>
-          </View>
-        </TouchableOpacity>
-      </Modal>
-
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
   );
 };
@@ -142,10 +144,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     height: '100%',
-  },
-  dropdownIcon: {
-    color: colors.secondary.main,
-    fontSize: 12,
   },
   androidPickerWrapper: {
     flexDirection: 'row',
@@ -174,23 +172,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: spacing.xs,
   },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
   modalContent: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: borderRadius.md,
-    borderTopRightRadius: borderRadius.md,
     paddingBottom: 20,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    padding: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: '#CCCCCC',
   },
   doneButton: {
     fontSize: 16,

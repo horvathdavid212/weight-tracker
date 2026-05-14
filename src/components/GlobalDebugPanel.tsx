@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
 import {
-  View,
-  TouchableOpacity,
-  StyleSheet,
-  Modal,
-  ScrollView,
   Alert,
+  ScrollView,
+  StyleSheet,
   Text as RNText,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { WeightEntry } from '../types/WeightEntry';
 import { useDebug } from '../context/DebugContext';
-import { Card, Text, Button } from './ui';
-import { colors, spacing, borderRadius } from '../theme';
+import { AppModal, Button, Card, ModalHeader, Text } from './ui';
+import { borderRadius, colors, spacing } from '../theme';
 import { generateWeightEntryId } from '../services/WeightDataService';
 import { asyncStorageClient, AsyncStorageEntry } from '../storage/asyncStorageClient';
 import { useWeightEntries } from '../hooks/useWeightEntries';
@@ -95,8 +94,8 @@ const GlobalDebugPanel: React.FC = () => {
               console.error('Error clearing storage:', error);
               Alert.alert('Error', 'Failed to clear storage');
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
@@ -129,7 +128,7 @@ const GlobalDebugPanel: React.FC = () => {
         yearData.push({
           id: generateWeightEntryId(),
           date: entryDate.toISOString(),
-          weight: parseFloat((trendWeight + fluctuation).toFixed(1))
+          weight: parseFloat((trendWeight + fluctuation).toFixed(1)),
         });
       }
 
@@ -155,134 +154,125 @@ const GlobalDebugPanel: React.FC = () => {
     <>
       <FloatingButton />
 
-      <Modal
+      <AppModal
         visible={isDebugPanelVisible}
-        transparent={true}
         animationType="slide"
         onRequestClose={hideDebugPanel}
+        dismissOnBackdropPress={false}
+        panelStyle={styles.debugPanel}
       >
-        <View style={styles.modalOverlay}>
-          <Card variant="elevated" style={styles.debugPanel}>
-            <View style={styles.header}>
-              <Text variant="h3" color={colors.secondary.main}>Debug Panel</Text>
-              <TouchableOpacity onPress={hideDebugPanel} style={styles.closeButton}>
-                <RNText style={styles.closeButtonText}>X</RNText>
-              </TouchableOpacity>
+        <ModalHeader title="Debug Panel" onClose={hideDebugPanel} showDivider />
+
+        <ScrollView style={styles.content}>
+          <Card variant="outlined" style={styles.section}>
+            <Text variant="h4" color={colors.secondary.main} style={styles.sectionTitle}>
+              Data Management
+            </Text>
+            <View style={styles.buttonGroup}>
+              <Button
+                title="Add Sample Data"
+                onPress={addDummyData}
+                variant="secondary"
+                size="small"
+                style={styles.button}
+              />
+              <Button
+                title="Generate Year Data"
+                onPress={generateYearOfData}
+                variant="secondary"
+                size="small"
+                style={styles.button}
+              />
+              <Button
+                title="Clear Weight Data"
+                onPress={clearAllData}
+                variant="tertiary"
+                size="small"
+                style={styles.button}
+              />
             </View>
-
-            <ScrollView style={styles.content}>
-              <Card variant="outlined" style={styles.section}>
-                <Text variant="h4" color={colors.secondary.main} style={styles.sectionTitle}>
-                  Data Management
-                </Text>
-                <View style={styles.buttonGroup}>
-                  <Button
-                    title="Add Sample Data"
-                    onPress={addDummyData}
-                    variant="secondary"
-                    size="small"
-                    style={styles.button}
-                  />
-                  <Button
-                    title="Generate Year Data"
-                    onPress={generateYearOfData}
-                    variant="secondary"
-                    size="small"
-                    style={styles.button}
-                  />
-                  <Button
-                    title="Clear Weight Data"
-                    onPress={clearAllData}
-                    variant="tertiary"
-                    size="small"
-                    style={styles.button}
-                  />
-                </View>
-              </Card>
-
-              <Card variant="outlined" style={styles.section}>
-                <Text variant="h4" color={colors.secondary.main} style={styles.sectionTitle}>
-                  Storage Management
-                </Text>
-                <View style={styles.buttonGroup}>
-                  <Button
-                    title="View Storage"
-                    onPress={viewStorage}
-                    variant="secondary"
-                    size="small"
-                    style={styles.button}
-                  />
-                  <Button
-                    title="Clear All Storage"
-                    onPress={clearAllStorage}
-                    variant="tertiary"
-                    size="small"
-                    style={styles.button}
-                  />
-                </View>
-              </Card>
-
-              <Card variant="outlined" style={styles.section}>
-                <Text variant="h4" color={colors.secondary.main} style={styles.sectionTitle}>
-                  App Information
-                </Text>
-                <View style={styles.infoRow}>
-                  <Text variant="body2" color={colors.text.secondary}>Version:</Text>
-                  <Text variant="body2">1.0.0</Text>
-                </View>
-                <View style={styles.infoRow}>
-                  <Text variant="body2" color={colors.text.secondary}>Environment:</Text>
-                  <Text variant="body2">Development</Text>
-                </View>
-                <View style={styles.infoRow}>
-                  <Text variant="body2" color={colors.text.secondary}>Build:</Text>
-                  <Text variant="body2">{formatShortDate(new Date())}</Text>
-                </View>
-              </Card>
-            </ScrollView>
           </Card>
-        </View>
-      </Modal>
 
-      <Modal
+          <Card variant="outlined" style={styles.section}>
+            <Text variant="h4" color={colors.secondary.main} style={styles.sectionTitle}>
+              Storage Management
+            </Text>
+            <View style={styles.buttonGroup}>
+              <Button
+                title="View Storage"
+                onPress={viewStorage}
+                variant="secondary"
+                size="small"
+                style={styles.button}
+              />
+              <Button
+                title="Clear All Storage"
+                onPress={clearAllStorage}
+                variant="tertiary"
+                size="small"
+                style={styles.button}
+              />
+            </View>
+          </Card>
+
+          <Card variant="outlined" style={styles.section}>
+            <Text variant="h4" color={colors.secondary.main} style={styles.sectionTitle}>
+              App Information
+            </Text>
+            <View style={styles.infoRow}>
+              <Text variant="body2" color={colors.text.secondary}>
+                Version:
+              </Text>
+              <Text variant="body2">1.0.0</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text variant="body2" color={colors.text.secondary}>
+                Environment:
+              </Text>
+              <Text variant="body2">Development</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text variant="body2" color={colors.text.secondary}>
+                Build:
+              </Text>
+              <Text variant="body2">{formatShortDate(new Date())}</Text>
+            </View>
+          </Card>
+        </ScrollView>
+      </AppModal>
+
+      <AppModal
         visible={showStorageData}
-        transparent={true}
         animationType="slide"
         onRequestClose={() => setShowStorageData(false)}
+        dismissOnBackdropPress={false}
+        panelStyle={styles.storagePanel}
       >
-        <View style={styles.modalOverlay}>
-          <Card variant="elevated" style={styles.storagePanel}>
-            <View style={styles.header}>
-              <Text variant="h3" color={colors.secondary.main}>Storage Contents</Text>
-              <TouchableOpacity
-                onPress={() => setShowStorageData(false)}
-                style={styles.closeButton}
-              >
-                <RNText style={styles.closeButtonText}>X</RNText>
-              </TouchableOpacity>
+        <ModalHeader
+          title="Storage Contents"
+          onClose={() => setShowStorageData(false)}
+          showDivider
+        />
+
+        <ScrollView style={styles.storageContent}>
+          {storageData.map(([key, value], index) => (
+            <View key={index} style={styles.storageItem}>
+              <Text variant="body2" color={colors.secondary.main} style={styles.storageKey}>
+                {key}
+              </Text>
+              <Text variant="caption" style={styles.storageValue}>
+                {value ? (value.length > 100 ? `${value.substring(0, 100)}...` : value) : 'null'}
+              </Text>
             </View>
+          ))}
 
-            <ScrollView style={styles.storageContent}>
-              {storageData.map(([key, value], index) => (
-                <View key={index} style={styles.storageItem}>
-                  <Text variant="body2" color={colors.secondary.main} style={styles.storageKey}>
-                    {key}
-                  </Text>
-                  <Text variant="caption" style={styles.storageValue}>
-                    {value ? (value.length > 100 ? value.substring(0, 100) + '...' : value) : 'null'}
-                  </Text>
-                </View>
-              ))}
-
-              {storageData.length === 0 && (
-                <Text variant="body1" style={styles.emptyText}>
-                  No data in storage
-                </Text>
-              )}
-            </ScrollView>
-          </Card>
-        </View>
-      </Modal>
+          {storageData.length === 0 ? (
+            <Text variant="body1" style={styles.emptyText}>
+              No data in storage
+            </Text>
+          ) : null}
+        </ScrollView>
+      </AppModal>
     </>
   );
 };
@@ -308,41 +298,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.md,
-  },
   debugPanel: {
     width: '90%',
+    maxWidth: 800,
     maxHeight: '80%',
     backgroundColor: colors.background.paper,
-    borderRadius: borderRadius.md,
-    padding: 0,
-    overflow: 'hidden',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.tertiary.main,
-  },
-  closeButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: colors.tertiary.main,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    color: colors.text.primary,
-    fontSize: 20,
-    fontWeight: 'bold',
   },
   content: {
     padding: spacing.md,
@@ -370,11 +330,9 @@ const styles = StyleSheet.create({
   },
   storagePanel: {
     width: '90%',
+    maxWidth: 800,
     maxHeight: '80%',
     backgroundColor: colors.background.paper,
-    borderRadius: borderRadius.md,
-    padding: 0,
-    overflow: 'hidden',
   },
   storageContent: {
     padding: spacing.md,

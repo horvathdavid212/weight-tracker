@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import {View, StyleSheet, Alert} from 'react-native';
-import {Button, Input, Text, Card, Dropdown} from './ui';
+import {Button, Input, Text, Card, Dropdown, FormActions} from './ui';
 import {colors, spacing} from '../theme';
 import { DEFAULT_WEIGHT_LOSS_RATE } from '../features/goals/goalService';
 import { useGoal } from '../features/goals/useGoal';
@@ -125,13 +125,12 @@ const GoalCalculator: React.FC = () => {
                     items={weightLossRateOptions}
                 />
 
-                <View style={styles.buttonGroup}>
+                <FormActions style={styles.buttonGroup}>
                     <Button
                         title="Calculate Goal Date"
                         onPress={handleCalculate}
                         variant="secondary"
                         fullWidth
-                        style={styles.buttonContainer}
                     />
 
                     <Button
@@ -139,9 +138,8 @@ const GoalCalculator: React.FC = () => {
                         onPress={handleClearGoal}
                         variant="outline"
                         fullWidth
-                        style={styles.buttonContainer}
                     />
-                </View>
+                </FormActions>
             </View>
 
             {goalData && (
@@ -174,9 +172,6 @@ const styles = StyleSheet.create({
     },
     buttonGroup: {
         marginVertical: spacing.md,
-    },
-    buttonContainer: {
-        marginBottom: spacing.sm,
     },
     recommendationContainer: {
         marginTop: spacing.md,

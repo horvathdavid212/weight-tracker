@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
-import {
-  View,
-  TouchableOpacity,
-  Modal,
-  FlatList,
-  StyleSheet,
-  TouchableWithoutFeedback,
-} from 'react-native';
-import { colors, spacing, borderRadius } from '../../theme';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { borderRadius, colors, spacing } from '../../theme';
+import AppModal from './AppModal';
+import ModalHeader from './ModalHeader';
 import Text from './Text';
 
 interface DropdownItem {
@@ -29,7 +25,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   items,
 }) => {
   const [modalVisible, setModalVisible] = useState(false);
-  const selectedItem = items.find(item => item.value === selectedValue);
+  const selectedItem = items.find((item) => item.value === selectedValue);
 
   const handleSelect = (value: string | number) => {
     onValueChange(value);
@@ -38,7 +34,7 @@ const Dropdown: React.FC<DropdownProps> = ({
 
   return (
     <View style={styles.container}>
-      {label && <Text variant="label">{label}</Text>}
+      {label ? <Text variant="label">{label}</Text> : null}
 
       <TouchableOpacity
         style={styles.dropdownButton}
@@ -48,51 +44,55 @@ const Dropdown: React.FC<DropdownProps> = ({
         <Text style={styles.selectedText}>
           {selectedItem ? selectedItem.label : 'Select an option'}
         </Text>
-        <Text style={styles.dropdownIcon}>▼</Text>
+        <Ionicons name="chevron-down" size={16} color={colors.secondary.main} />
       </TouchableOpacity>
 
-      <Modal
-        transparent={true}
+      <AppModal
         visible={modalVisible}
         animationType="fade"
         onRequestClose={() => setModalVisible(false)}
+        panelStyle={styles.modalContent}
       >
-        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text variant="h3" color={colors.secondary.main} style={styles.modalTitle}>
-                Select an option
-              </Text>
+        <ModalHeader
+          title={label ?? 'Select an option'}
+          titleAlign="center"
+          style={styles.modalHeader}
+        />
 
-              <FlatList
-                data={items}
-                keyExtractor={(item) => item.value.toString()}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={{
-                      ...styles.optionItem,
-                      ...(item.value === selectedValue ? styles.selectedItem : {}),
-                    }}
-                    onPress={() => handleSelect(item.value)}
-                  >
-                    <Text
-                      style={{
-                        ...styles.optionText,
-                        ...(item.value === selectedValue ? styles.selectedItemText : {}),
-                      }}
-                    >
-                      {item.label}
-                    </Text>
-                    {item.value === selectedValue && (
-                      <Text style={styles.checkmark}>✓</Text>
-                    )}
-                  </TouchableOpacity>
-                )}
-              />
-            </View>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
+        <FlatList
+          data={items}
+          keyExtractor={(item) => item.value.toString()}
+          renderItem={({ item }) => {
+            const isSelected = item.value === selectedValue;
+
+            return (
+              <TouchableOpacity
+                style={[
+                  styles.optionItem,
+                  isSelected ? styles.selectedItem : null,
+                ]}
+                onPress={() => handleSelect(item.value)}
+              >
+                <Text
+                  style={[
+                    styles.optionText,
+                    isSelected ? styles.selectedItemText : null,
+                  ]}
+                >
+                  {item.label}
+                </Text>
+                {isSelected ? (
+                  <Ionicons
+                    name="checkmark"
+                    size={18}
+                    color={colors.secondary.main}
+                  />
+                ) : null}
+              </TouchableOpacity>
+            );
+          }}
+        />
+      </AppModal>
     </View>
   );
 };
@@ -116,29 +116,15 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: 16,
   },
-  dropdownIcon: {
-    color: colors.secondary.main,
-    fontSize: 12,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.md,
-  },
   modalContent: {
     width: '100%',
     maxHeight: '80%',
     backgroundColor: colors.background.paper,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
     borderLeftWidth: 4,
     borderLeftColor: colors.secondary.main,
   },
-  modalTitle: {
-    marginBottom: spacing.md,
-    textAlign: 'center',
+  modalHeader: {
+    paddingBottom: spacing.sm,
   },
   optionItem: {
     flexDirection: 'row',
@@ -158,11 +144,6 @@ const styles = StyleSheet.create({
   },
   selectedItemText: {
     color: colors.secondary.main,
-    fontWeight: 'bold',
-  },
-  checkmark: {
-    color: colors.secondary.main,
-    fontSize: 18,
     fontWeight: 'bold',
   },
 });

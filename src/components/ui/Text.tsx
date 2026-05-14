@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text as RNText, TextProps, TextStyle } from 'react-native';
+import { StyleProp, Text as RNText, TextProps, TextStyle } from 'react-native';
 import { typography } from '../../theme';
 
 type TypographyVariant =
@@ -17,7 +17,7 @@ interface CustomTextProps extends TextProps {
   variant?: TypographyVariant;
   color?: string;
   align?: 'auto' | 'left' | 'right' | 'center' | 'justify';
-  style?: TextStyle;
+  style?: StyleProp<TextStyle>;
 }
 
 const Text: React.FC<CustomTextProps> = ({
@@ -30,12 +30,12 @@ const Text: React.FC<CustomTextProps> = ({
 }) => {
   return (
     <RNText
-      style={{
-        ...typography[variant],
-        ...(color ? { color } : {}),
-        ...(align ? { textAlign: align } : {}),
-        ...style,
-      }}
+      style={[
+        typography[variant],
+        color ? { color } : null,
+        align ? { textAlign: align } : null,
+        style,
+      ]}
       {...rest}
     >
       {children}

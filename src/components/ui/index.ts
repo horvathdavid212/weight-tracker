@@ -8,8 +8,12 @@ import SimplePicker from './SimplePicker';
 import Dropdown from './Dropdown';
 import HeaderIcon from './HeaderIcon';
 import SectionCard from './SectionCard';
+import AppModal from './AppModal';
+import FormActions from './FormActions';
+import ModalHeader from './ModalHeader';
 
 export {
+  AppModal,
   Button,
   Input,
   Card,
@@ -18,6 +22,8 @@ export {
   Picker,
   SimplePicker,
   Dropdown,
+  FormActions,
   HeaderIcon,
+  ModalHeader,
   SectionCard,
 };
