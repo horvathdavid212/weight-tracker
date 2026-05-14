@@ -10,7 +10,7 @@ import { colors } from '../theme';
 
 import { StackScreenProps } from '@react-navigation/stack';
 import { useFocusEffect } from '@react-navigation/native';
-import { RootStackParamList } from '../types/navigation';
+import { RootStackParamList } from '../navigation/types';
 import { useWeightEntries } from '../hooks/useWeightEntries';
 import { useGoal } from '../features/goals/useGoal';
 import { buildWeightChartData } from '../utils/weightChartData';

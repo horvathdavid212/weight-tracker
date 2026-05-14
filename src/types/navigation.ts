@@ -1,4 +1,1 @@
-export type RootStackParamList = {
-  Home: undefined;
-  Settings: undefined;
-};
+export type { RootStackParamList } from '../navigation/types';
