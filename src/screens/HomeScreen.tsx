@@ -12,12 +12,19 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../types/navigation';
 import { useWeightEntries } from '../hooks/useWeightEntries';
+import { useGoal } from '../features/goals/useGoal';
+import { buildWeightChartData } from '../utils/weightChartData';
 
 type HomeScreenProps = StackScreenProps<RootStackParamList, 'Home'>;
 
 const HomeScreen: React.FC<HomeScreenProps> = () => {
     const [editingEntry, setEditingEntry] = useState<WeightEntry | null>(null);
     const { entries, isLoading, reload, addEntry, updateEntry, deleteEntry } = useWeightEntries();
+    const { goalData } = useGoal();
+    const chartData = React.useMemo(
+        () => buildWeightChartData(entries, goalData),
+        [entries, goalData]
+    );
 
     useFocusEffect(
         React.useCallback(() => {
@@ -59,7 +66,7 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
                 headerContent={(
                     <View>
                         <WeightInput onNewEntry={addEntry} />
-                        {!isLoading ? <WeightChart entries={entries} /> : null}
+                        {!isLoading && chartData ? <WeightChart chartData={chartData} /> : null}
                     </View>
                 )}
                 onSelectEntry={handleSelectEntry}

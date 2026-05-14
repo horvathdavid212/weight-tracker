@@ -1,68 +1,45 @@
 import React, { useMemo } from 'react';
-import { Dimensions, StyleSheet } from 'react-native';
+import { StyleSheet, useWindowDimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
-import { WeightEntry } from '../types/WeightEntry';
 import { Card, Text } from './ui';
 import { colors, spacing } from '../theme';
-import { buildGoalLine } from '../features/goals/goalService';
-import { useGoal } from '../features/goals/useGoal';
+import { WeightChartViewModel } from '../utils/weightChartData';
 
 type WeightChartProps = {
-    entries: WeightEntry[];
+    chartData: WeightChartViewModel;
 };
 
-export default function WeightChart({ entries }: WeightChartProps) {
-    const { goalData } = useGoal();
+export default function WeightChart({ chartData }: WeightChartProps) {
+    const { width: windowWidth } = useWindowDimensions();
 
-    const chartEntries = useMemo(
-        () =>
-            [...entries]
-                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                .slice(0, 7)
-                .reverse(),
-        [entries]
+    const chartWidth = useMemo(
+        () => Math.max(windowWidth - spacing.md * 4, 240),
+        [windowWidth]
+    );
+    const chartStyle = useMemo(
+        () => ({
+            ...styles.chart,
+            width: chartWidth,
+        }),
+        [chartWidth]
     );
 
-    const chartLabels = useMemo(
-        () =>
-            chartEntries.map((entry, index) => {
-                const date = new Date(entry.date);
-                const shortLabel = `${String(date.getMonth() + 1).padStart(2, '0')}/${String(
-                    date.getDate()
-                ).padStart(2, '0')}`;
-
-                if (chartEntries.length > 5 && index % 2 === 1 && index !== chartEntries.length - 1) {
-                    return '';
-                }
-
-                return shortLabel;
-            }),
-        [chartEntries]
-    );
-
-    const goalLine = useMemo(
-        () => (goalData ? buildGoalLine(chartEntries, goalData) : []),
-        [chartEntries, goalData]
-    );
-
-    if (entries.length < 2) return null;
-
-    const data = {
-        labels: chartLabels,
+    const data = useMemo(() => ({
+        labels: chartData.labels,
         datasets: [
             {
-                data: chartEntries.map(e => e.weight),
+                data: chartData.weights,
                 color: (opacity = 1) => `rgba(57, 255, 20, ${opacity})`,
                 strokeWidth: 3
             },
-            ...(goalLine.length > 0 ? [{
-                data: goalLine,
+            ...(chartData.goalLine.length > 0 ? [{
+                data: chartData.goalLine,
                 color: (opacity = 1) => `rgba(100, 100, 250, ${opacity * 0.7})`,
                 strokeWidth: 2,
                 strokeDashArray: [5, 5]
             }] : [])
         ]
-    };
+    }), [chartData.goalLine, chartData.labels, chartData.weights]);
 
     return (
         <Card variant="elevated" style={styles.chartCard}>
@@ -71,7 +48,7 @@ export default function WeightChart({ entries }: WeightChartProps) {
             </Text>
             <LineChart
                 data={data}
-                width={Dimensions.get('window').width - 60}
+                width={chartWidth}
                 height={220}
                 yAxisSuffix="kg"
                 chartConfig={{
@@ -95,7 +72,7 @@ export default function WeightChart({ entries }: WeightChartProps) {
                     useShadowColorFromDataset: true
                 }}
                 bezier
-                style={styles.chart}
+                style={chartStyle}
             />
         </Card>
     );
