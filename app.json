@@ -8,6 +8,10 @@
     "userInterfaceStyle": "dark",
     "jsEngine": "hermes",
     "newArchEnabled": true,
+    "backgroundColor": "#121212",
+    "androidNavigationBar": {
+      "barStyle": "light-content"
+    },
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
