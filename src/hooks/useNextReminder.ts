@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   isReminderFrequency,
-  NEXT_REMINDER_KEY,
-  REMINDER_FREQUENCY_KEY,
 } from '../notifications/scheduler';
+import { asyncStorageClient } from '../storage/asyncStorageClient';
+import { STORAGE_KEYS } from '../storage/storageKeys';
 
 /**
  * Custom hook to manage and automatically update the next reminder date
@@ -16,7 +15,7 @@ export function useNextReminder() {
 
   const fetchNextReminder = useCallback(async () => {
     try {
-      const storedReminder = await AsyncStorage.getItem(NEXT_REMINDER_KEY);
+      const storedReminder = await asyncStorageClient.getString(STORAGE_KEYS.nextReminder);
       setNextReminder(storedReminder ?? null);
     } catch (error) {
       console.error('Error fetching next reminder:', error);
@@ -30,7 +29,7 @@ export function useNextReminder() {
     const reminderDate = new Date(nextReminder);
     if (reminderDate > new Date()) return;
 
-    const frequency = await AsyncStorage.getItem(REMINDER_FREQUENCY_KEY);
+    const frequency = await asyncStorageClient.getString(STORAGE_KEYS.reminderFrequency);
     if (isReminderFrequency(frequency) && frequency !== 'disabled' && frequency !== 'now') {
       await fetchNextReminder();
       return;

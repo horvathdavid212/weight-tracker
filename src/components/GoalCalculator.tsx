@@ -1,8 +1,9 @@
 import React, {useState, useEffect} from 'react';
 import {View, StyleSheet, Alert} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Button, Input, Text, Card, Dropdown} from './ui';
 import {colors, spacing} from '../theme';
+import { asyncStorageClient } from '../storage/asyncStorageClient';
+import { STORAGE_KEYS } from '../storage/storageKeys';
 
 interface GoalData {
     currentWeight: number;
@@ -30,9 +31,8 @@ const GoalCalculator: React.FC = () => {
 
     const loadGoalData = async () => {
         try {
-            const data = await AsyncStorage.getItem('goalData');
-            if (data) {
-                const parsed: GoalData = JSON.parse(data);
+            const parsed = await asyncStorageClient.getJson<GoalData>(STORAGE_KEYS.goalData);
+            if (parsed) {
                 setCurrentWeight(parsed.currentWeight.toString());
                 setGoalWeight(parsed.goalWeight.toString());
                 setWeightLossRate(parsed.weightLossRate);
@@ -71,7 +71,7 @@ const GoalCalculator: React.FC = () => {
                 goalDate: calculatedDate.toISOString(),
             };
 
-            await AsyncStorage.setItem('goalData', JSON.stringify(goalData));
+            await asyncStorageClient.setJson(STORAGE_KEYS.goalData, goalData);
             setRecommendedDate(calculatedDate);
             setDisplayedRate(weightLossRate);
         } catch (error) {
@@ -90,7 +90,7 @@ const GoalCalculator: React.FC = () => {
 
     const clearGoalData = async () => {
         try {
-            await AsyncStorage.removeItem('goalData');
+            await asyncStorageClient.removeItem(STORAGE_KEYS.goalData);
             setCurrentWeight('');
             setGoalWeight('');
             setWeightLossRate(0.5);

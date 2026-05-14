@@ -1,14 +1,11 @@
 import React from 'react';
 import { Button, View } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { asyncStorageClient } from './asyncStorageClient';
 
 const DebugAsyncStorage: React.FC = () => {
     const logStorage = async () => {
         try {
-            // Get all keys stored in AsyncStorage
-            const keys = await AsyncStorage.getAllKeys();
-            // Retrieve all key-value pairs
-            const stores = await AsyncStorage.multiGet(keys);
+            const stores = await asyncStorageClient.getAllItems();
             console.log('AsyncStorage contents:', stores);
         } catch (error) {
             console.error('Error fetching AsyncStorage contents', error);

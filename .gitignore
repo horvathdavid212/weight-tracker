@@ -87,3 +87,6 @@ ios/DerivedData/
 ios/.xcode.env.local
 xcuserdata/
 *.xcworkspace/
+
+# other
+docs

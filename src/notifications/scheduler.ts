@@ -1,10 +1,11 @@
 import * as Notifications from 'expo-notifications';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SchedulableTriggerInputTypes } from 'expo-notifications';
 import { Alert } from 'react-native';
+import { asyncStorageClient } from '../storage/asyncStorageClient';
+import { STORAGE_KEYS } from '../storage/storageKeys';
 
-export const REMINDER_FREQUENCY_KEY = 'reminderFrequency';
-export const NEXT_REMINDER_KEY = 'nextReminder';
+export const REMINDER_FREQUENCY_KEY = STORAGE_KEYS.reminderFrequency;
+export const NEXT_REMINDER_KEY = STORAGE_KEYS.nextReminder;
 
 export type ReminderFrequency =
     | 'disabled'
@@ -25,7 +26,6 @@ export function isReminderFrequency(value: string | null): value is ReminderFreq
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
-        shouldShowAlert: true,
         shouldShowBanner: true,
         shouldShowList: true,
         shouldPlaySound: false,
@@ -77,10 +77,10 @@ function computeNextReminder(frequency: ReminderFrequency): Date | null {
 export async function updateNextReminderDate(frequency: ReminderFrequency) {
     const nextReminderDate = computeNextReminder(frequency);
     if (nextReminderDate) {
-        await AsyncStorage.setItem(NEXT_REMINDER_KEY, nextReminderDate.toISOString());
+        await asyncStorageClient.setString(NEXT_REMINDER_KEY, nextReminderDate.toISOString());
         console.log('Next reminder updated to:', nextReminderDate.toLocaleString());
     } else {
-        await AsyncStorage.removeItem(NEXT_REMINDER_KEY);
+        await asyncStorageClient.removeItem(NEXT_REMINDER_KEY);
         console.log('Next reminder cleared');
     }
 
@@ -89,18 +89,18 @@ export async function updateNextReminderDate(frequency: ReminderFrequency) {
 
 export async function clearReminderSchedule() {
     await Notifications.cancelAllScheduledNotificationsAsync();
-    await AsyncStorage.multiRemove([REMINDER_FREQUENCY_KEY, NEXT_REMINDER_KEY]);
+    await asyncStorageClient.multiRemove([REMINDER_FREQUENCY_KEY, NEXT_REMINDER_KEY]);
 }
 
 Notifications.addNotificationReceivedListener(async () => {
-    const frequency = await AsyncStorage.getItem(REMINDER_FREQUENCY_KEY);
+    const frequency = await asyncStorageClient.getString(REMINDER_FREQUENCY_KEY);
     if (isReminderFrequency(frequency) && frequency !== 'disabled' && frequency !== 'now') {
         await updateNextReminderDate(frequency);
         return;
     }
 
     if (frequency === 'now') {
-        await AsyncStorage.removeItem(NEXT_REMINDER_KEY);
+        await asyncStorageClient.removeItem(NEXT_REMINDER_KEY);
     }
 });
 
@@ -114,7 +114,7 @@ export async function scheduleReminder(frequency: ReminderFrequency) {
     console.log('Schedule reminder', frequency);
 
     if (status !== 'granted') {
-        await AsyncStorage.removeItem(NEXT_REMINDER_KEY);
+        await asyncStorageClient.removeItem(NEXT_REMINDER_KEY);
         Alert.alert('Permissions Required', 'Permission not granted for notifications.');
         return;
     }
@@ -134,19 +134,17 @@ export async function scheduleReminder(frequency: ReminderFrequency) {
         trigger = null;
     } else if (frequency === 'weekly') {
         trigger = {
-            type: SchedulableTriggerInputTypes.CALENDAR,
+            type: SchedulableTriggerInputTypes.WEEKLY,
             weekday: 1,
             hour: 12,
             minute: 0,
-            repeats: true,
         };
     } else {
         trigger = {
-            type: SchedulableTriggerInputTypes.CALENDAR,
+            type: SchedulableTriggerInputTypes.MONTHLY,
             day: 1,
             hour: 12,
             minute: 0,
-            repeats: true,
         };
     }
 

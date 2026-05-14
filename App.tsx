@@ -3,6 +3,7 @@ import { StatusBar, View, Text, LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { colors } from './src/theme';
 import { HeaderIcon } from './src/components/ui';
 import { DebugProvider } from './src/context/DebugContext';
@@ -76,55 +77,57 @@ export default function App() {
 
     return (
         <DebugProvider>
-            <GestureHandlerRootView style={{ flex: 1 }}>
-                <NavigationContainer
-                    fallback={
-                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background.main }}>
-                            <Text style={{ color: colors.text.primary }}>Loading...</Text>
-                        </View>
-                    }
-                >
-                    <StatusBar
-                        backgroundColor={colors.primary.main}
-                        barStyle="light-content"
-                    />
-                    <Stack.Navigator
-                        screenOptions={{
-                            headerStyle: {
-                                backgroundColor: colors.primary.main,
-                            },
-                            headerTintColor: colors.text.primary,
-                            headerTitleStyle: {
-                                fontWeight: 'bold',
-                            },
-                            cardStyle: { backgroundColor: colors.background.main }
-                        }}
+            <SafeAreaProvider>
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                    <NavigationContainer
+                        fallback={
+                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background.main }}>
+                                <Text style={{ color: colors.text.primary }}>Loading...</Text>
+                            </View>
+                        }
                     >
-                        <Stack.Screen
-                            name="Home"
-                            options={({ navigation }) => ({
-                                title: 'Weight Tracker',
-                                headerRight: () => (
-                                    <HeaderIcon
-                                        iconName="settings-outline"
-                                        size={24}
-                                        color={colors.secondary.main}
-                                        onPress={() => navigation.navigate('Settings')}
-                                    />
-                                ),
-                            })}
-                        >
-                            {(props) => <HomeScreen {...props} dataVersion={dataVersion} />}
-                        </Stack.Screen>
-                        <Stack.Screen
-                            name="Settings"
-                            component={Settings}
-                            options={{ title: 'Settings' }}
+                        <StatusBar
+                            backgroundColor={colors.primary.main}
+                            barStyle="light-content"
                         />
-                    </Stack.Navigator>
-                </NavigationContainer>
-                {__DEV__ ? <GlobalDebugPanel onDataChange={handleDataChange} /> : null}
-            </GestureHandlerRootView>
+                        <Stack.Navigator
+                            screenOptions={{
+                                headerStyle: {
+                                    backgroundColor: colors.primary.main,
+                                },
+                                headerTintColor: colors.text.primary,
+                                headerTitleStyle: {
+                                    fontWeight: 'bold',
+                                },
+                                cardStyle: { backgroundColor: colors.background.main }
+                            }}
+                        >
+                            <Stack.Screen
+                                name="Home"
+                                options={({ navigation }) => ({
+                                    title: 'Weight Tracker',
+                                    headerRight: () => (
+                                        <HeaderIcon
+                                            iconName="settings-outline"
+                                            size={24}
+                                            color={colors.secondary.main}
+                                            onPress={() => navigation.navigate('Settings')}
+                                        />
+                                    ),
+                                })}
+                            >
+                                {(props) => <HomeScreen {...props} dataVersion={dataVersion} />}
+                            </Stack.Screen>
+                            <Stack.Screen
+                                name="Settings"
+                                component={Settings}
+                                options={{ title: 'Settings' }}
+                            />
+                        </Stack.Navigator>
+                    </NavigationContainer>
+                    {__DEV__ ? <GlobalDebugPanel onDataChange={handleDataChange} /> : null}
+                </GestureHandlerRootView>
+            </SafeAreaProvider>
         </DebugProvider>
     );
 }

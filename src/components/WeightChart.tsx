@@ -2,9 +2,10 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Dimensions, StyleSheet } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { WeightEntry } from '../types/WeightEntry';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Card, Text } from './ui';
 import { colors, spacing } from '../theme';
+import { asyncStorageClient } from '../storage/asyncStorageClient';
+import { STORAGE_KEYS } from '../storage/storageKeys';
 
 interface GoalData {
     currentWeight: number;
@@ -53,13 +54,12 @@ export default function WeightChart({ entries }: WeightChartProps) {
         }
 
         try {
-            const goalDataStr = await AsyncStorage.getItem('goalData');
-            if (!goalDataStr) {
+            const goalData = await asyncStorageClient.getJson<GoalData>(STORAGE_KEYS.goalData);
+            if (!goalData) {
                 setGoalLine([]);
                 return;
             }
 
-            const goalData: GoalData = JSON.parse(goalDataStr);
             const startDate = new Date(chartEntries[0].date);
             const endDate = new Date(goalData.goalDate);
             const totalDuration = endDate.getTime() - startDate.getTime();

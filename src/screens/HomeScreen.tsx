@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { WeightEntry } from '../types/WeightEntry';
 import WeightInput from "../components/WeightInput";
 import WeightChart from "../components/WeightChart";
@@ -7,7 +7,7 @@ import WeightEntryList from "../components/WeightEntryList";
 import EditEntry from "../components/EditEntry";
 import { WeightDataService } from '../services/WeightDataService';
 import { Container } from '../components/ui';
-import { colors, spacing } from '../theme';
+import { colors } from '../theme';
 
 import { StackScreenProps } from '@react-navigation/stack';
 import { useFocusEffect } from '@react-navigation/native';
@@ -79,24 +79,19 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ dataVersion }) => {
     };
 
     return (
-        <Container scrollable style={styles.container}>
-            {/* Debug panel is now global */}
-            <WeightInput onNewEntry={handleNewEntry} />
-
-            {isLoading ? (
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color={colors.secondary.main} />
-                </View>
-            ) : (
-                <>
-                    <WeightChart entries={entries} />
-                    <WeightEntryList
-                        entries={entries}
-                        onSelectEntry={handleSelectEntry}
-                        onDeleteEntry={handleDeleteEntry}
-                    />
-                </>
-            )}
+        <Container style={styles.container} padded={false}>
+            <WeightEntryList
+                entries={entries}
+                isLoading={isLoading}
+                headerContent={(
+                    <View>
+                        <WeightInput onNewEntry={handleNewEntry} />
+                        {!isLoading ? <WeightChart entries={entries} /> : null}
+                    </View>
+                )}
+                onSelectEntry={handleSelectEntry}
+                onDeleteEntry={handleDeleteEntry}
+            />
 
             {editingEntry && (
                 <EditEntry
@@ -109,8 +104,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ dataVersion }) => {
                     }}
                 />
             )}
-
-
         </Container>
     );
 };
@@ -120,17 +113,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: colors.background.main,
     },
-    title: {
-        marginBottom: spacing.md,
-        marginTop: spacing.lg,
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginVertical: spacing.lg,
-    },
-
 });
 
 export default HomeScreen;

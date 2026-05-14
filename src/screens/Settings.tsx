@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Alert, StyleSheet } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import ReminderPicker from '../components/ReminderPicker';
 import GoalCalculator from '../components/GoalCalculator';
 import { Container, Text, Card, Button } from '../components/ui';
@@ -8,10 +7,11 @@ import { colors, spacing } from '../theme';
 import {
     clearReminderSchedule,
     isReminderFrequency,
-    REMINDER_FREQUENCY_KEY,
     ReminderFrequency,
     scheduleReminder,
 } from '../notifications/scheduler';
+import { asyncStorageClient } from '../storage/asyncStorageClient';
+import { STORAGE_KEYS } from '../storage/storageKeys';
 
 const Settings: React.FC = () => {
     const [reminderFrequency, setReminderFrequency] = React.useState<ReminderFrequency>('disabled');
@@ -21,7 +21,7 @@ const Settings: React.FC = () => {
 
         const loadReminderFrequency = async () => {
             try {
-                const storedFrequency = await AsyncStorage.getItem(REMINDER_FREQUENCY_KEY);
+                const storedFrequency = await asyncStorageClient.getString(STORAGE_KEYS.reminderFrequency);
                 if (isMounted && isReminderFrequency(storedFrequency)) {
                     setReminderFrequency(storedFrequency);
                 }
@@ -46,7 +46,7 @@ const Settings: React.FC = () => {
                 return;
             }
 
-            await AsyncStorage.setItem(REMINDER_FREQUENCY_KEY, value);
+            await asyncStorageClient.setString(STORAGE_KEYS.reminderFrequency, value);
             await scheduleReminder(value);
         } catch (error) {
             console.error('Error updating reminder settings:', error);

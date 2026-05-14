@@ -8,12 +8,12 @@ import {
   Alert,
   Text as RNText,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { WeightEntry } from '../types/WeightEntry';
 import { useDebug } from '../context/DebugContext';
 import { Card, Text, Button } from './ui';
 import { colors, spacing, borderRadius } from '../theme';
 import { generateWeightEntryId, WeightDataService } from '../services/WeightDataService';
+import { asyncStorageClient, AsyncStorageEntry } from '../storage/asyncStorageClient';
 
 interface GlobalDebugPanelProps {
   onDataChange?: () => void;
@@ -21,7 +21,7 @@ interface GlobalDebugPanelProps {
 
 const GlobalDebugPanel: React.FC<GlobalDebugPanelProps> = ({ onDataChange }) => {
   const { isDebugPanelVisible, hideDebugPanel, toggleDebugPanel } = useDebug();
-  const [storageData, setStorageData] = useState<Array<readonly [string, string | null]>>([]);
+  const [storageData, setStorageData] = useState<AsyncStorageEntry[]>([]);
   const [showStorageData, setShowStorageData] = useState(false);
 
   const createRelativeDate = (daysAgo: number) => {
@@ -87,7 +87,7 @@ const GlobalDebugPanel: React.FC<GlobalDebugPanelProps> = ({ onDataChange }) => 
           style: 'destructive',
           onPress: async () => {
             try {
-              await AsyncStorage.clear();
+              await asyncStorageClient.clear();
               if (onDataChange) onDataChange();
               Alert.alert('Success', 'All storage cleared successfully');
             } catch (error) {
@@ -102,9 +102,8 @@ const GlobalDebugPanel: React.FC<GlobalDebugPanelProps> = ({ onDataChange }) => 
 
   const viewStorage = async () => {
     try {
-      const keys = await AsyncStorage.getAllKeys();
-      const stores = await AsyncStorage.multiGet(keys);
-      setStorageData([...stores]);
+      const stores = await asyncStorageClient.getAllItems();
+      setStorageData(stores);
       setShowStorageData(true);
     } catch (error) {
       console.error('Error fetching AsyncStorage contents', error);

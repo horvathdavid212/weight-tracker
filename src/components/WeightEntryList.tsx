@@ -1,16 +1,31 @@
 import React from 'react';
-import { FlatList, View, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import {
+    ActivityIndicator,
+    FlatList,
+    View,
+    TouchableOpacity,
+    StyleSheet,
+    Alert,
+} from 'react-native';
 import { WeightEntry } from '../types/WeightEntry';
 import { Card, Text } from './ui';
 import { colors, spacing, borderRadius } from '../theme';
 
 interface WeightEntryListProps {
     entries: WeightEntry[];
+    headerContent?: React.ReactNode;
+    isLoading?: boolean;
     onSelectEntry: (entry: WeightEntry) => void;
     onDeleteEntry: (id: string) => void;
 }
 
-const WeightEntryList: React.FC<WeightEntryListProps> = ({ entries, onSelectEntry, onDeleteEntry }) => {
+const WeightEntryList: React.FC<WeightEntryListProps> = ({
+    entries,
+    headerContent,
+    isLoading = false,
+    onSelectEntry,
+    onDeleteEntry,
+}) => {
     const sortedEntries = [...entries].sort((a, b) =>
         new Date(b.date).getTime() - new Date(a.date).getTime()
     );
@@ -86,42 +101,71 @@ const WeightEntryList: React.FC<WeightEntryListProps> = ({ entries, onSelectEntr
         );
     };
 
-    return (
-        <View style={styles.container}>
-            <Text variant="h2" color={colors.secondary.main} style={styles.listHeader}>Weight History</Text>
-            {sortedEntries.length === 0 ? (
-                <Card variant="outlined" style={styles.emptyCard}>
-                    <Text
-                        variant="body1"
-                        color={colors.text.secondary}
-                        align="center"
-                    >
-                        No weight entries yet. Add your first entry above!
-                    </Text>
-                </Card>
-            ) : (
-                <FlatList
-                    data={sortedEntries}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderItem}
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={styles.listContent}
-                />
-            )}
+    const renderListHeader = () => (
+        <View style={styles.headerContainer}>
+            {headerContent}
+            <Text variant="h2" color={colors.secondary.main} style={styles.listHeader}>
+                Weight History
+            </Text>
         </View>
+    );
+
+    const renderListEmpty = () => {
+        if (isLoading) {
+            return (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={colors.secondary.main} />
+                </View>
+            );
+        }
+
+        return (
+            <Card variant="outlined" style={styles.emptyCard}>
+                <Text
+                    variant="body1"
+                    color={colors.text.secondary}
+                    align="center"
+                >
+                    No weight entries yet. Add your first entry above!
+                </Text>
+            </Card>
+        );
+    };
+
+    return (
+        <FlatList
+            data={isLoading ? [] : sortedEntries}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            showsVerticalScrollIndicator={false}
+            ListHeaderComponent={renderListHeader}
+            ListEmptyComponent={renderListEmpty}
+            contentContainerStyle={styles.listContent}
+            style={styles.list}
+        />
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
+    list: {
         flex: 1,
-        marginTop: spacing.md,
+    },
+    headerContainer: {
+        paddingTop: spacing.md,
     },
     listHeader: {
         marginBottom: spacing.md,
+        marginTop: spacing.md,
     },
     listContent: {
+        flexGrow: 1,
+        paddingHorizontal: spacing.md,
         paddingBottom: spacing.xl,
+    },
+    loadingContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginVertical: spacing.lg,
     },
     entryCard: {
         marginBottom: spacing.sm,

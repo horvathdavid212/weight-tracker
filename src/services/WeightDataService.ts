@@ -1,7 +1,8 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StoredWeightEntry, WeightEntry } from '../types/WeightEntry';
+import { asyncStorageClient } from '../storage/asyncStorageClient';
+import { STORAGE_KEYS } from '../storage/storageKeys';
 
-const STORAGE_KEY = 'weightEntries';
+const STORAGE_KEY = STORAGE_KEYS.weightEntries;
 const ENTRY_ID_PREFIX = 'weight';
 
 export function generateWeightEntryId(): string {
@@ -18,7 +19,7 @@ export function sortEntriesByDateDesc(entries: WeightEntry[]): WeightEntry[] {
 
 function hasEntryShape(
   entry: unknown
-): entry is Partial<WeightEntry> & { date: unknown; weight: unknown; id?: unknown } {
+): entry is Record<string, unknown> {
   return typeof entry === 'object' && entry !== null;
 }
 
@@ -62,19 +63,18 @@ export class WeightDataService {
    */
   static async getEntries(): Promise<WeightEntry[]> {
     try {
-      const data = await AsyncStorage.getItem(STORAGE_KEY);
-      if (!data) {
+      const parsed = await asyncStorageClient.getJson<unknown>(STORAGE_KEY);
+      if (parsed === null) {
         return [];
       }
 
-      const parsed: unknown = JSON.parse(data);
       if (!Array.isArray(parsed)) {
         return [];
       }
 
       const normalizedEntries = normalizeEntries(parsed);
       if (JSON.stringify(parsed) !== JSON.stringify(normalizedEntries)) {
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedEntries));
+        await asyncStorageClient.setJson(STORAGE_KEY, normalizedEntries);
       }
 
       return normalizedEntries;
@@ -93,10 +93,7 @@ export class WeightDataService {
       const normalizedEntry = normalizeEntry(
         {
           ...entry,
-          id:
-            'id' in entry && typeof entry.id === 'string'
-              ? entry.id
-              : generateWeightEntryId(),
+          id: 'id' in entry ? entry.id : generateWeightEntryId(),
         },
         entries.length
       );
@@ -106,7 +103,7 @@ export class WeightDataService {
       }
 
       const updatedEntries = sortEntriesByDateDesc([normalizedEntry, ...entries]);
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedEntries));
+      await asyncStorageClient.setJson(STORAGE_KEY, updatedEntries);
       return true;
     } catch (error) {
       console.error('Error saving weight entry:', error);
@@ -139,9 +136,9 @@ export class WeightDataService {
 
       const updatedEntries = [...entries];
       updatedEntries[entryIndex] = normalizedEntry;
-      await AsyncStorage.setItem(
+      await asyncStorageClient.setJson(
         STORAGE_KEY,
-        JSON.stringify(sortEntriesByDateDesc(updatedEntries))
+        sortEntriesByDateDesc(updatedEntries)
       );
       return true;
     } catch (error) {
@@ -161,7 +158,7 @@ export class WeightDataService {
       }
 
       const updatedEntries = entries.filter((entry) => entry.id !== id);
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedEntries));
+      await asyncStorageClient.setJson(STORAGE_KEY, updatedEntries);
       return true;
     } catch (error) {
       console.error('Error deleting weight entry:', error);
@@ -175,7 +172,7 @@ export class WeightDataService {
   static async replaceEntries(entries: StoredWeightEntry[]): Promise<WeightEntry[]> {
     try {
       const normalizedEntries = normalizeEntries(entries);
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedEntries));
+      await asyncStorageClient.setJson(STORAGE_KEY, normalizedEntries);
       return normalizedEntries;
     } catch (error) {
       console.error('Error replacing weight entries:', error);
@@ -188,7 +185,7 @@ export class WeightDataService {
    */
   static async clearAllEntries(): Promise<boolean> {
     try {
-      await AsyncStorage.removeItem(STORAGE_KEY);
+      await asyncStorageClient.removeItem(STORAGE_KEY);
       return true;
     } catch (error) {
       console.error('Error clearing weight entries:', error);
