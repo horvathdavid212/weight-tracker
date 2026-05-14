@@ -2,15 +2,8 @@ import React, {useState, useEffect} from 'react';
 import {View, StyleSheet, Alert} from 'react-native';
 import {Button, Input, Text, Card, Dropdown} from './ui';
 import {colors, spacing} from '../theme';
-import { asyncStorageClient } from '../storage/asyncStorageClient';
-import { STORAGE_KEYS } from '../storage/storageKeys';
-
-interface GoalData {
-    currentWeight: number;
-    goalWeight: number;
-    goalDate: string;
-    weightLossRate: number;
-}
+import { DEFAULT_WEIGHT_LOSS_RATE } from '../features/goals/goalService';
+import { useGoal } from '../features/goals/useGoal';
 
 const WEIGHT_LOSS_RATES = [
     {label: '0.5 kg per week', value: 0.5},
@@ -19,64 +12,38 @@ const WEIGHT_LOSS_RATES = [
 ];
 
 const GoalCalculator: React.FC = () => {
+    const { goalData, saveGoal, clearGoal } = useGoal();
     const [currentWeight, setCurrentWeight] = useState('');
     const [goalWeight, setGoalWeight] = useState('');
-    const [weightLossRate, setWeightLossRate] = useState(0.5);
-    const [recommendedDate, setRecommendedDate] = useState<Date | null>(null);
-    const [displayedRate, setDisplayedRate] = useState<number | null>(null);
+    const [weightLossRate, setWeightLossRate] = useState(DEFAULT_WEIGHT_LOSS_RATE);
 
     useEffect(() => {
-        loadGoalData();
-    }, []);
-
-    const loadGoalData = async () => {
-        try {
-            const parsed = await asyncStorageClient.getJson<GoalData>(STORAGE_KEYS.goalData);
-            if (parsed) {
-                setCurrentWeight(parsed.currentWeight.toString());
-                setGoalWeight(parsed.goalWeight.toString());
-                setWeightLossRate(parsed.weightLossRate);
-                setRecommendedDate(new Date(parsed.goalDate));
-                setDisplayedRate(parsed.weightLossRate);
-            }
-        } catch (error) {
-            console.error('Error loading goal data:', error);
+        if (goalData) {
+            setCurrentWeight(goalData.currentWeight.toString());
+            setGoalWeight(goalData.goalWeight.toString());
+            setWeightLossRate(goalData.weightLossRate);
+            return;
         }
-    };
+
+        setCurrentWeight('');
+        setGoalWeight('');
+        setWeightLossRate(DEFAULT_WEIGHT_LOSS_RATE);
+    }, [goalData]);
 
     const handleCalculate = async () => {
         const currentWeightNum = parseFloat(currentWeight);
         const goalWeightNum = parseFloat(goalWeight);
 
-        if (isNaN(currentWeightNum) || isNaN(goalWeightNum)) {
-            Alert.alert('Invalid Input', 'Please enter valid numbers for weights');
-            return;
-        }
-
-        if (goalWeightNum >= currentWeightNum) {
-            Alert.alert('Invalid Goal', 'Goal weight should be less than current weight');
-            return;
-        }
-
-        const weightDifference = Math.abs(currentWeightNum - goalWeightNum);
-        const weeksNeeded = weightDifference / weightLossRate;
-        const calculatedDate = new Date();
-        calculatedDate.setDate(calculatedDate.getDate() + (weeksNeeded * 7));
-
         try {
-            const goalData: GoalData = {
+            await saveGoal({
                 currentWeight: currentWeightNum,
                 goalWeight: goalWeightNum,
-                weightLossRate: weightLossRate,
-                goalDate: calculatedDate.toISOString(),
-            };
-
-            await asyncStorageClient.setJson(STORAGE_KEYS.goalData, goalData);
-            setRecommendedDate(calculatedDate);
-            setDisplayedRate(weightLossRate);
+                weightLossRate,
+            });
         } catch (error) {
-            console.error('Error saving goal data:', error);
-            Alert.alert('Error', 'Failed to save goal data');
+            const message =
+                error instanceof Error ? error.message : 'Failed to save goal data';
+            Alert.alert('Error', message);
         }
     };
 
@@ -88,20 +55,6 @@ const GoalCalculator: React.FC = () => {
         });
     };
 
-    const clearGoalData = async () => {
-        try {
-            await asyncStorageClient.removeItem(STORAGE_KEYS.goalData);
-            setCurrentWeight('');
-            setGoalWeight('');
-            setWeightLossRate(0.5);
-            setRecommendedDate(null);
-            setDisplayedRate(null);
-        } catch (error) {
-            console.error('Error clearing goal data:', error);
-            Alert.alert('Error', 'Failed to clear goal data');
-        }
-    };
-
     const handleClearGoal = () => {
         Alert.alert(
             'Clear Goal',
@@ -110,7 +63,17 @@ const GoalCalculator: React.FC = () => {
                 {text: 'Cancel', style: 'cancel'},
                 {
                     text: 'Clear',
-                    onPress: clearGoalData,
+                    onPress: async () => {
+                        try {
+                            await clearGoal();
+                        } catch (error) {
+                            const message =
+                                error instanceof Error
+                                    ? error.message
+                                    : 'Failed to clear goal data';
+                            Alert.alert('Error', message);
+                        }
+                    },
                     style: 'destructive'
                 }
             ]
@@ -173,16 +136,16 @@ const GoalCalculator: React.FC = () => {
                 </View>
             </View>
 
-            {recommendedDate && (
+            {goalData && (
                 <Card variant="elevated" style={styles.recommendationContainer}>
                     <Text variant="body1" style={styles.recommendationText}>
                         Recommended achievement date:
                     </Text>
                     <Text variant="h3" color={colors.secondary.main} style={styles.dateText}>
-                        {formatDate(recommendedDate)}
+                        {formatDate(new Date(goalData.goalDate))}
                     </Text>
                     <Text variant="caption" style={styles.recommendationSubtext}>
-                        Based on {displayedRate} kg weight loss per week
+                        Based on {goalData.weightLossRate} kg weight loss per week
                     </Text>
                 </Card>
             )}

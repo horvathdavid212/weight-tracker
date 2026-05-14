@@ -1,25 +1,18 @@
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo } from 'react';
 import { Dimensions, StyleSheet } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { WeightEntry } from '../types/WeightEntry';
 import { Card, Text } from './ui';
 import { colors, spacing } from '../theme';
-import { asyncStorageClient } from '../storage/asyncStorageClient';
-import { STORAGE_KEYS } from '../storage/storageKeys';
-
-interface GoalData {
-    currentWeight: number;
-    goalWeight: number;
-    weightLossRate: number;
-    goalDate: string;
-}
+import { buildGoalLine } from '../features/goals/goalService';
+import { useGoal } from '../features/goals/useGoal';
 
 type WeightChartProps = {
     entries: WeightEntry[];
 };
 
 export default function WeightChart({ entries }: WeightChartProps) {
-    const [goalLine, setGoalLine] = useState<number[]>([]);
+    const { goalData } = useGoal();
 
     const chartEntries = useMemo(
         () =>
@@ -47,51 +40,10 @@ export default function WeightChart({ entries }: WeightChartProps) {
         [chartEntries]
     );
 
-    const loadGoalData = useCallback(async () => {
-        if (chartEntries.length < 2) {
-            setGoalLine([]);
-            return;
-        }
-
-        try {
-            const goalData = await asyncStorageClient.getJson<GoalData>(STORAGE_KEYS.goalData);
-            if (!goalData) {
-                setGoalLine([]);
-                return;
-            }
-
-            const startDate = new Date(chartEntries[0].date);
-            const endDate = new Date(goalData.goalDate);
-            const totalDuration = endDate.getTime() - startDate.getTime();
-
-            if (Number.isNaN(totalDuration) || totalDuration <= 0) {
-                setGoalLine([]);
-                return;
-            }
-
-            const points = chartEntries.map((entry) => {
-                const pointDate = new Date(entry.date);
-                const progress = Math.min(
-                    Math.max((pointDate.getTime() - startDate.getTime()) / totalDuration, 0),
-                    1
-                );
-
-                return (
-                    goalData.currentWeight +
-                    (goalData.goalWeight - goalData.currentWeight) * progress
-                );
-            });
-
-            setGoalLine(points);
-        } catch (error) {
-            console.error('Error loading goal data:', error);
-            setGoalLine([]);
-        }
-    }, [chartEntries]);
-
-    useEffect(() => {
-        void loadGoalData();
-    }, [loadGoalData]);
+    const goalLine = useMemo(
+        () => (goalData ? buildGoalLine(chartEntries, goalData) : []),
+        [chartEntries, goalData]
+    );
 
     if (entries.length < 2) return null;
 
