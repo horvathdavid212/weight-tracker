@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Alert, StyleSheet } from 'react-native';
 import ReminderPicker from '../components/ReminderPicker';
 import GoalCalculator from '../components/GoalCalculator';
-import { Container, Text, Card, Button } from '../components/ui';
+import { Container, Text, Button, SectionCard } from '../components/ui';
 import { colors, spacing } from '../theme';
 import {
     useReminderSettings,
@@ -46,28 +46,23 @@ const Settings: React.FC = () => {
                 Settings
             </Text>
 
-            <Card variant="elevated" style={{...styles.section, ...styles.goalCard}}>
-                <Text variant="h3" color={colors.secondary.main} style={styles.sectionTitle}>
-                    Weight Goal
-                </Text>
+            <SectionCard title="Weight Goal" style={styles.section}>
                 <GoalCalculator />
-            </Card>
+            </SectionCard>
 
-            <Card variant="elevated" style={{...styles.section, ...styles.reminderCard}}>
-                <Text variant="h3" color={colors.secondary.main} style={styles.sectionTitle}>
-                    Reminder Settings
-                </Text>
+            <SectionCard title="Reminder Settings" style={styles.section}>
                 <ReminderPicker
                     reminderFrequency={reminderFrequency}
                     onValueChange={handleReminderChange}
                 />
-            </Card>
+            </SectionCard>
 
-            <Card variant="elevated" style={{...styles.section, ...styles.otherCard}}>
-                <Text variant="h3" color={colors.secondary.main} style={styles.sectionTitle}>
-                    Other Settings
-                </Text>
-                <View style={styles.otherButtonContainer}>
+            <SectionCard
+                title="Other Settings"
+                style={styles.section}
+                contentStyle={styles.otherButtonContainer}
+            >
+                <View>
                     <Button
                         title="Clear Reminder Settings"
                         onPress={handleClearReminderSettings}
@@ -75,7 +70,7 @@ const Settings: React.FC = () => {
                         fullWidth
                     />
                 </View>
-            </Card>
+            </SectionCard>
         </Container>
     );
 };
@@ -94,26 +89,6 @@ const styles = StyleSheet.create({
     },
     section: {
         marginBottom: spacing.lg,
-        padding: 0,
-        overflow: 'hidden',
-        backgroundColor: colors.background.paper,
-    },
-    sectionTitle: {
-        marginBottom: spacing.md,
-        padding: spacing.md,
-        paddingBottom: 0,
-    },
-    goalCard: {
-        borderTopWidth: 4,
-        borderTopColor: colors.secondary.main,
-    },
-    reminderCard: {
-        borderTopWidth: 4,
-        borderTopColor: colors.secondary.main,
-    },
-    otherCard: {
-        borderTopWidth: 4,
-        borderTopColor: colors.secondary.main,
     },
     otherButtonContainer: {
         padding: spacing.md,

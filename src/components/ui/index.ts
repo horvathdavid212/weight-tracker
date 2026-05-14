@@ -7,6 +7,7 @@ import Picker from './Picker';
 import SimplePicker from './SimplePicker';
 import Dropdown from './Dropdown';
 import HeaderIcon from './HeaderIcon';
+import SectionCard from './SectionCard';
 
 export {
   Button,
@@ -18,4 +19,5 @@ export {
   SimplePicker,
   Dropdown,
   HeaderIcon,
+  SectionCard,
 };
