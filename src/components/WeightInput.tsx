@@ -5,6 +5,13 @@ import {generateWeightEntryId} from '../services/WeightDataService';
 import {Card, Input, Button, Text} from './ui';
 import {colors, spacing} from '../theme';
 import {useReminderSettings} from '../features/reminders/useReminderSettings';
+import {
+    formatShortDateTime,
+    formatShortTime,
+    isToday,
+    isTomorrow,
+} from '../utils/dateFormat';
+import {parseAndValidateWeightInput} from '../utils/weightValidation';
 
 interface WeightInputProps {
     onNewEntry: (entry: WeightEntry) => Promise<boolean>;
@@ -17,9 +24,9 @@ const WeightInput: React.FC<WeightInputProps> = ({onNewEntry}) => {
     const {nextReminder} = useReminderSettings();
 
     const saveWeight = async () => {
-        const parsedWeight = parseFloat(weight);
-        if (isNaN(parsedWeight)) {
-            Alert.alert('Invalid Input', 'Please enter a valid weight.');
+        const {value: parsedWeight, error} = parseAndValidateWeightInput(weight);
+        if (error || parsedWeight === null) {
+            Alert.alert('Invalid Input', error ?? 'Please enter a valid weight.');
             return;
         }
 
@@ -53,43 +60,16 @@ const WeightInput: React.FC<WeightInputProps> = ({onNewEntry}) => {
         const reminderDate = new Date(nextReminder);
         const now = new Date();
 
-        // Format the date and time
-        const formattedDate = reminderDate.toLocaleString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-        });
-
-        // Check if the reminder is for today
-        const isToday = reminderDate.getDate() === now.getDate() &&
-                        reminderDate.getMonth() === now.getMonth() &&
-                        reminderDate.getFullYear() === now.getFullYear();
-
-        // Check if the reminder is for tomorrow
-        const tomorrow = new Date(now);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const isTomorrow = reminderDate.getDate() === tomorrow.getDate() &&
-                          reminderDate.getMonth() === tomorrow.getMonth() &&
-                          reminderDate.getFullYear() === tomorrow.getFullYear();
-
         // Create a more descriptive message
-        if (isToday) {
-            return `Next reminder: Today at ${reminderDate.toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-            })}`;
-        } else if (isTomorrow) {
-            return `Next reminder: Tomorrow at ${reminderDate.toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-            })}`;
-        } else {
-            return `Next reminder: ${formattedDate}`;
+        if (isToday(reminderDate, now)) {
+            return `Next reminder: Today at ${formatShortTime(reminderDate)}`;
         }
+
+        if (isTomorrow(reminderDate, now)) {
+            return `Next reminder: Tomorrow at ${formatShortTime(reminderDate)}`;
+        }
+
+        return `Next reminder: ${formatShortDateTime(reminderDate)}`;
     }, [nextReminder]);
 
     return (

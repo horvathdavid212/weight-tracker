@@ -1,6 +1,7 @@
 import { WeightEntry } from '../../types/WeightEntry';
 import { asyncStorageClient } from '../../storage/asyncStorageClient';
 import { STORAGE_KEYS } from '../../storage/storageKeys';
+import { validateWeightValue } from '../../utils/weightValidation';
 import { GoalData, GoalInput } from './types';
 
 export const DEFAULT_WEIGHT_LOSS_RATE = 0.5;
@@ -19,12 +20,22 @@ export async function clearGoalData(): Promise<void> {
 }
 
 export function validateGoalInput(input: GoalInput): string | null {
-  if (
-    Number.isNaN(input.currentWeight) ||
-    Number.isNaN(input.goalWeight) ||
-    Number.isNaN(input.weightLossRate)
-  ) {
-    return 'Please enter valid numbers for weights';
+  const currentWeightError = validateWeightValue(input.currentWeight, {
+    fieldLabel: 'current weight',
+  });
+  if (currentWeightError) {
+    return currentWeightError;
+  }
+
+  const goalWeightError = validateWeightValue(input.goalWeight, {
+    fieldLabel: 'goal weight',
+  });
+  if (goalWeightError) {
+    return goalWeightError;
+  }
+
+  if (Number.isNaN(input.weightLossRate) || input.weightLossRate <= 0) {
+    return 'Please select a valid weight loss rate.';
   }
 
   if (input.goalWeight >= input.currentWeight) {

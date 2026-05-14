@@ -15,6 +15,7 @@ import { colors, spacing, borderRadius } from '../theme';
 import { generateWeightEntryId } from '../services/WeightDataService';
 import { asyncStorageClient, AsyncStorageEntry } from '../storage/asyncStorageClient';
 import { useWeightEntries } from '../hooks/useWeightEntries';
+import { formatShortDate } from '../utils/dateFormat';
 
 const GlobalDebugPanel: React.FC = () => {
   const { isDebugPanelVisible, hideDebugPanel, toggleDebugPanel } = useDebug();
@@ -235,7 +236,7 @@ const GlobalDebugPanel: React.FC = () => {
                 </View>
                 <View style={styles.infoRow}>
                   <Text variant="body2" color={colors.text.secondary}>Build:</Text>
-                  <Text variant="body2">{new Date().toLocaleDateString()}</Text>
+                  <Text variant="body2">{formatShortDate(new Date())}</Text>
                 </View>
               </Card>
             </ScrollView>

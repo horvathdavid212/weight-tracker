@@ -4,6 +4,9 @@ import {Button, Input, Text, Card, Dropdown} from './ui';
 import {colors, spacing} from '../theme';
 import { DEFAULT_WEIGHT_LOSS_RATE } from '../features/goals/goalService';
 import { useGoal } from '../features/goals/useGoal';
+import { formatLongDate } from '../utils/dateFormat';
+import { formatWeight } from '../utils/weightFormat';
+import { parseAndValidateWeightInput } from '../utils/weightValidation';
 
 const WEIGHT_LOSS_RATES = [
     {label: '0.5 kg per week', value: 0.5},
@@ -31,13 +34,26 @@ const GoalCalculator: React.FC = () => {
     }, [goalData]);
 
     const handleCalculate = async () => {
-        const currentWeightNum = parseFloat(currentWeight);
-        const goalWeightNum = parseFloat(goalWeight);
+        const currentWeightResult = parseAndValidateWeightInput(currentWeight, {
+            fieldLabel: 'current weight',
+        });
+        if (currentWeightResult.error || currentWeightResult.value === null) {
+            Alert.alert('Error', currentWeightResult.error ?? 'Please enter a valid current weight.');
+            return;
+        }
+
+        const goalWeightResult = parseAndValidateWeightInput(goalWeight, {
+            fieldLabel: 'goal weight',
+        });
+        if (goalWeightResult.error || goalWeightResult.value === null) {
+            Alert.alert('Error', goalWeightResult.error ?? 'Please enter a valid goal weight.');
+            return;
+        }
 
         try {
             await saveGoal({
-                currentWeight: currentWeightNum,
-                goalWeight: goalWeightNum,
+                currentWeight: currentWeightResult.value,
+                goalWeight: goalWeightResult.value,
                 weightLossRate,
             });
         } catch (error) {
@@ -45,14 +61,6 @@ const GoalCalculator: React.FC = () => {
                 error instanceof Error ? error.message : 'Failed to save goal data';
             Alert.alert('Error', message);
         }
-    };
-
-    const formatDate = (date: Date) => {
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
     };
 
     const handleClearGoal = () => {
@@ -142,10 +150,10 @@ const GoalCalculator: React.FC = () => {
                         Recommended achievement date:
                     </Text>
                     <Text variant="h3" color={colors.secondary.main} style={styles.dateText}>
-                        {formatDate(new Date(goalData.goalDate))}
+                        {formatLongDate(goalData.goalDate)}
                     </Text>
                     <Text variant="caption" style={styles.recommendationSubtext}>
-                        Based on {goalData.weightLossRate} kg weight loss per week
+                        Based on {formatWeight(goalData.weightLossRate, 2)} kg weight loss per week
                     </Text>
                 </Card>
             )}

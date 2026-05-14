@@ -10,6 +10,8 @@ import {
 import { WeightEntry } from '../types/WeightEntry';
 import { Card, Text } from './ui';
 import { colors, spacing, borderRadius } from '../theme';
+import { formatShortDate } from '../utils/dateFormat';
+import { formatWeight } from '../utils/weightFormat';
 
 interface WeightEntryListProps {
     entries: WeightEntry[];
@@ -45,15 +47,6 @@ const WeightEntryList: React.FC<WeightEntryListProps> = ({
         );
     };
 
-    const formatDate = (dateString: string): string => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
-
     const getWeightTrend = (currentIndex: number): string | null => {
         if (currentIndex >= sortedEntries.length - 1) return null;
 
@@ -78,12 +71,12 @@ const WeightEntryList: React.FC<WeightEntryListProps> = ({
                 >
                     <View style={styles.entryContent}>
                         <Text variant="body1" style={styles.entryDate}>
-                            {formatDate(item.date)}
+                            {formatShortDate(item.date)}
                         </Text>
                         <View style={styles.weightContainer}>
                             <View style={styles.weightValue}>
                                 <Text variant="h3" color={colors.secondary.main} style={styles.entryWeight}>
-                                    {item.weight}
+                                    {formatWeight(item.weight)}
                                 </Text>
                                 <Text variant="body2" style={styles.unitText}>kg</Text>
                             </View>
