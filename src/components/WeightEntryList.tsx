@@ -1,17 +1,19 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
     ActivityIndicator,
     FlatList,
     View,
-    TouchableOpacity,
     StyleSheet,
     Alert,
 } from 'react-native';
 import { WeightEntry } from '../types/WeightEntry';
 import { Card, Text } from './ui';
-import { colors, spacing, borderRadius } from '../theme';
-import { formatShortDate } from '../utils/dateFormat';
-import { formatWeight } from '../utils/weightFormat';
+import { colors, spacing } from '../theme';
+import WeightEntryListItem from './WeightEntryListItem';
+import {
+    buildWeightEntryListViewModels,
+    WeightEntryListItemViewModel,
+} from '../utils/weightEntryViewModel';
 
 interface WeightEntryListProps {
     entries: WeightEntry[];
@@ -28,8 +30,9 @@ const WeightEntryList: React.FC<WeightEntryListProps> = ({
     onSelectEntry,
     onDeleteEntry,
 }) => {
-    const sortedEntries = [...entries].sort((a, b) =>
-        new Date(b.date).getTime() - new Date(a.date).getTime()
+    const entryItems = useMemo(
+        () => buildWeightEntryListViewModels(entries),
+        [entries]
     );
 
     const confirmDelete = (id: string) => {
@@ -47,52 +50,13 @@ const WeightEntryList: React.FC<WeightEntryListProps> = ({
         );
     };
 
-    const getWeightTrend = (currentIndex: number): string | null => {
-        if (currentIndex >= sortedEntries.length - 1) return null;
-
-        const currentWeight = sortedEntries[currentIndex].weight;
-        const previousWeight = sortedEntries[currentIndex + 1].weight;
-
-        if (currentWeight < previousWeight) return 'v';
-        if (currentWeight > previousWeight) return '^';
-        return '=';
-    };
-
-    const renderItem = ({ item, index }: { item: WeightEntry; index: number }) => {
-        const trend = getWeightTrend(index);
-        const trendColor = trend === 'v' ? colors.status.success : trend === '^' ? colors.status.error : colors.text.secondary;
-
-        return (
-            <Card variant="elevated" style={styles.entryCard}>
-                <TouchableOpacity
-                    onPress={() => onSelectEntry(item)}
-                    onLongPress={() => confirmDelete(item.id)}
-                    activeOpacity={0.7}
-                >
-                    <View style={styles.entryContent}>
-                        <Text variant="body1" style={styles.entryDate}>
-                            {formatShortDate(item.date)}
-                        </Text>
-                        <View style={styles.weightContainer}>
-                            <View style={styles.weightValue}>
-                                <Text variant="h3" color={colors.secondary.main} style={styles.entryWeight}>
-                                    {formatWeight(item.weight)}
-                                </Text>
-                                <Text variant="body2" style={styles.unitText}>kg</Text>
-                            </View>
-                            {trend && (
-                                <View style={[styles.trendBadge, { backgroundColor: trendColor }]}>
-                                    <Text variant="body2" color={colors.common.white} style={styles.trendText}>
-                                        {trend}
-                                    </Text>
-                                </View>
-                            )}
-                        </View>
-                    </View>
-                </TouchableOpacity>
-            </Card>
-        );
-    };
+    const renderItem = ({ item }: { item: WeightEntryListItemViewModel }) => (
+        <WeightEntryListItem
+            item={item}
+            onPress={() => onSelectEntry(item.entry)}
+            onLongPress={() => confirmDelete(item.entry.id)}
+        />
+    );
 
     const renderListHeader = () => (
         <View style={styles.headerContainer}>
@@ -127,8 +91,8 @@ const WeightEntryList: React.FC<WeightEntryListProps> = ({
 
     return (
         <FlatList
-            data={isLoading ? [] : sortedEntries}
-            keyExtractor={(item) => item.id}
+            data={isLoading ? [] : entryItems}
+            keyExtractor={(item) => item.entry.id}
             renderItem={renderItem}
             showsVerticalScrollIndicator={false}
             ListHeaderComponent={renderListHeader}
@@ -159,50 +123,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginVertical: spacing.lg,
-    },
-    entryCard: {
-        marginBottom: spacing.sm,
-        padding: 0,
-        overflow: 'hidden',
-        backgroundColor: colors.background.paper,
-        borderLeftWidth: 4,
-        borderLeftColor: colors.secondary.main,
-    },
-    entryContent: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: spacing.md,
-    },
-    entryDate: {
-        color: colors.text.secondary,
-    },
-    weightContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    weightValue: {
-        flexDirection: 'row',
-        alignItems: 'baseline',
-    },
-    entryWeight: {
-        marginRight: spacing.xs,
-        marginBottom: 0,
-        lineHeight: 24,
-    },
-    unitText: {
-        color: colors.text.secondary,
-        marginRight: spacing.sm,
-        marginBottom: 0,
-    },
-    trendBadge: {
-        paddingHorizontal: spacing.sm,
-        paddingVertical: spacing.xs,
-        borderRadius: borderRadius.round,
-        marginLeft: spacing.xs,
-    },
-    trendText: {
-        fontWeight: 'bold',
     },
     emptyCard: {
         padding: spacing.lg,
