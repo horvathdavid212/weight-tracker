@@ -2,7 +2,7 @@ import React from 'react';
 import {View, StyleSheet} from 'react-native';
 import {Dropdown, Text} from './ui';
 import {colors, spacing} from '../theme';
-import {ReminderFrequency} from '../notifications/scheduler';
+import {ReminderFrequency} from '../features/reminders/types';
 
 interface ReminderPickerProps {
     reminderFrequency: ReminderFrequency;

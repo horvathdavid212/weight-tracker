@@ -4,7 +4,7 @@ import {WeightEntry} from '../types/WeightEntry';
 import {generateWeightEntryId} from '../services/WeightDataService';
 import {Card, Input, Button, Text} from './ui';
 import {colors, spacing} from '../theme';
-import {useNextReminder} from '../hooks/useNextReminder';
+import {useReminderSettings} from '../features/reminders/useReminderSettings';
 
 interface WeightInputProps {
     onNewEntry: (entry: WeightEntry) => Promise<boolean>;
@@ -14,8 +14,7 @@ const WeightInput: React.FC<WeightInputProps> = ({onNewEntry}) => {
     const [weight, setWeight] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // Use our custom hook to get and automatically update the next reminder
-    const nextReminder = useNextReminder();
+    const {nextReminder} = useReminderSettings();
 
     const saveWeight = async () => {
         const parsedWeight = parseFloat(weight);

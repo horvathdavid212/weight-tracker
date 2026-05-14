@@ -9,6 +9,7 @@ import { HeaderIcon } from './src/components/ui';
 import { DebugProvider } from './src/context/DebugContext';
 import GlobalDebugPanel from './src/components/GlobalDebugPanel';
 import { GoalProvider } from './src/features/goals/useGoal';
+import { ReminderSettingsProvider } from './src/features/reminders/useReminderSettings';
 import { WeightEntriesProvider } from './src/hooks/useWeightEntries';
 
 import HomeScreen from './src/screens/HomeScreen';
@@ -76,56 +77,58 @@ export default function App() {
         <DebugProvider>
             <WeightEntriesProvider>
                 <GoalProvider>
-                    <SafeAreaProvider>
-                        <GestureHandlerRootView style={{ flex: 1 }}>
-                            <NavigationContainer
-                                fallback={
-                                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background.main }}>
-                                        <Text style={{ color: colors.text.primary }}>Loading...</Text>
-                                    </View>
-                                }
-                            >
-                                <StatusBar
-                                    backgroundColor={colors.primary.main}
-                                    barStyle="light-content"
-                                />
-                                <Stack.Navigator
-                                    screenOptions={{
-                                        headerStyle: {
-                                            backgroundColor: colors.primary.main,
-                                        },
-                                        headerTintColor: colors.text.primary,
-                                        headerTitleStyle: {
-                                            fontWeight: 'bold',
-                                        },
-                                        cardStyle: { backgroundColor: colors.background.main }
-                                    }}
+                    <ReminderSettingsProvider>
+                        <SafeAreaProvider>
+                            <GestureHandlerRootView style={{ flex: 1 }}>
+                                <NavigationContainer
+                                    fallback={
+                                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background.main }}>
+                                            <Text style={{ color: colors.text.primary }}>Loading...</Text>
+                                        </View>
+                                    }
                                 >
-                                    <Stack.Screen
-                                        name="Home"
-                                        component={HomeScreen}
-                                        options={({ navigation }) => ({
-                                            title: 'Weight Tracker',
-                                            headerRight: () => (
-                                                <HeaderIcon
-                                                    iconName="settings-outline"
-                                                    size={24}
-                                                    color={colors.secondary.main}
-                                                    onPress={() => navigation.navigate('Settings')}
-                                                />
-                                            ),
-                                        })}
+                                    <StatusBar
+                                        backgroundColor={colors.primary.main}
+                                        barStyle="light-content"
                                     />
-                                    <Stack.Screen
-                                        name="Settings"
-                                        component={Settings}
-                                        options={{ title: 'Settings' }}
-                                    />
-                                </Stack.Navigator>
-                            </NavigationContainer>
-                            {__DEV__ ? <GlobalDebugPanel /> : null}
-                        </GestureHandlerRootView>
-                    </SafeAreaProvider>
+                                    <Stack.Navigator
+                                        screenOptions={{
+                                            headerStyle: {
+                                                backgroundColor: colors.primary.main,
+                                            },
+                                            headerTintColor: colors.text.primary,
+                                            headerTitleStyle: {
+                                                fontWeight: 'bold',
+                                            },
+                                            cardStyle: { backgroundColor: colors.background.main }
+                                        }}
+                                    >
+                                        <Stack.Screen
+                                            name="Home"
+                                            component={HomeScreen}
+                                            options={({ navigation }) => ({
+                                                title: 'Weight Tracker',
+                                                headerRight: () => (
+                                                    <HeaderIcon
+                                                        iconName="settings-outline"
+                                                        size={24}
+                                                        color={colors.secondary.main}
+                                                        onPress={() => navigation.navigate('Settings')}
+                                                    />
+                                                ),
+                                            })}
+                                        />
+                                        <Stack.Screen
+                                            name="Settings"
+                                            component={Settings}
+                                            options={{ title: 'Settings' }}
+                                        />
+                                    </Stack.Navigator>
+                                </NavigationContainer>
+                                {__DEV__ ? <GlobalDebugPanel /> : null}
+                            </GestureHandlerRootView>
+                        </SafeAreaProvider>
+                    </ReminderSettingsProvider>
                 </GoalProvider>
             </WeightEntriesProvider>
         </DebugProvider>
