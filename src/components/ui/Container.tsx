@@ -1,12 +1,13 @@
 import React from 'react';
 import { View, StyleSheet, ViewProps, ViewStyle, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Edge, SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing } from '../../theme';
 
 interface ContainerProps extends ViewProps {
   scrollable?: boolean;
   padded?: boolean;
   safeArea?: boolean;
+  safeAreaEdges?: Edge[];
   style?: ViewStyle;
   contentContainerStyle?: ViewStyle;
 }
@@ -16,6 +17,7 @@ const Container: React.FC<ContainerProps> = ({
   scrollable = false,
   padded = true,
   safeArea = true,
+  safeAreaEdges = ['left', 'right', 'bottom'],
   style,
   contentContainerStyle,
   ...rest
@@ -45,7 +47,11 @@ const Container: React.FC<ContainerProps> = ({
   );
 
   if (safeArea) {
-    return <SafeAreaView style={styles.safeArea}>{content}</SafeAreaView>;
+    return (
+      <SafeAreaView style={styles.safeArea} edges={safeAreaEdges}>
+        {content}
+      </SafeAreaView>
+    );
   }
 
   return content;
