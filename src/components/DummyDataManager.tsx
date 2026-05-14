@@ -1,13 +1,10 @@
 import React from 'react';
 import { View, Button, StyleSheet } from 'react-native';
 import { WeightEntry } from '../types/WeightEntry';
-import { WeightDataService } from '../services/WeightDataService';
+import { useWeightEntries } from '../hooks/useWeightEntries';
 
-interface DummyDataManagerProps {
-    onDataChange: () => void;
-}
-
-const DummyDataManager: React.FC<DummyDataManagerProps> = ({ onDataChange }) => {
+const DummyDataManager: React.FC = () => {
+    const { entries, replaceEntries } = useWeightEntries();
     const dummyData: WeightEntry[] = [
         { id: 'legacy-sample-1', date: '2024-02-01T10:00:00.000Z', weight: 115.3 },
         { id: 'legacy-sample-2', date: '2024-02-08T10:00:00.000Z', weight: 114.5 },
@@ -17,10 +14,9 @@ const DummyDataManager: React.FC<DummyDataManagerProps> = ({ onDataChange }) => 
 
     const addDummyData = async () => {
         try {
-            const currentEntries = await WeightDataService.getEntries();
-            const updatedEntries = [...currentEntries];
+            const updatedEntries = [...entries];
             for (const dummyEntry of dummyData) {
-                if (!currentEntries.some(entry =>
+                if (!entries.some(entry =>
                     entry.date === dummyEntry.date &&
                     entry.weight === dummyEntry.weight
                 )) {
@@ -28,8 +24,7 @@ const DummyDataManager: React.FC<DummyDataManagerProps> = ({ onDataChange }) => 
                 }
             }
 
-            await WeightDataService.replaceEntries(updatedEntries);
-            onDataChange();
+            await replaceEntries(updatedEntries);
         } catch (error) {
             console.error('Error adding dummy data:', error);
         }
@@ -37,16 +32,14 @@ const DummyDataManager: React.FC<DummyDataManagerProps> = ({ onDataChange }) => 
 
     const clearDummyData = async () => {
         try {
-            const currentEntries = await WeightDataService.getEntries();
-            const filteredEntries = currentEntries.filter(entry =>
+            const filteredEntries = entries.filter(entry =>
                 !dummyData.some(dummy =>
                     dummy.date === entry.date &&
                     dummy.weight === entry.weight
                 )
             );
 
-            await WeightDataService.replaceEntries(filteredEntries);
-            onDataChange();
+            await replaceEntries(filteredEntries);
         } catch (error) {
             console.error('Error clearing dummy data:', error);
         }

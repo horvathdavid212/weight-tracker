@@ -12,15 +12,13 @@ import { WeightEntry } from '../types/WeightEntry';
 import { useDebug } from '../context/DebugContext';
 import { Card, Text, Button } from './ui';
 import { colors, spacing, borderRadius } from '../theme';
-import { generateWeightEntryId, WeightDataService } from '../services/WeightDataService';
+import { generateWeightEntryId } from '../services/WeightDataService';
 import { asyncStorageClient, AsyncStorageEntry } from '../storage/asyncStorageClient';
+import { useWeightEntries } from '../hooks/useWeightEntries';
 
-interface GlobalDebugPanelProps {
-  onDataChange?: () => void;
-}
-
-const GlobalDebugPanel: React.FC<GlobalDebugPanelProps> = ({ onDataChange }) => {
+const GlobalDebugPanel: React.FC = () => {
   const { isDebugPanelVisible, hideDebugPanel, toggleDebugPanel } = useDebug();
+  const { entries, replaceEntries, clearEntries, reload } = useWeightEntries();
   const [storageData, setStorageData] = useState<AsyncStorageEntry[]>([]);
   const [showStorageData, setShowStorageData] = useState(false);
 
@@ -43,11 +41,10 @@ const GlobalDebugPanel: React.FC<GlobalDebugPanelProps> = ({ onDataChange }) => 
 
   const addDummyData = async () => {
     try {
-      const currentEntries = await WeightDataService.getEntries();
-      const updatedEntries = [...currentEntries];
+      const updatedEntries = [...entries];
       for (const dummyEntry of dummyData) {
         if (
-          !currentEntries.some(
+          !entries.some(
             (entry) =>
               entry.date === dummyEntry.date && entry.weight === dummyEntry.weight
           )
@@ -56,8 +53,7 @@ const GlobalDebugPanel: React.FC<GlobalDebugPanelProps> = ({ onDataChange }) => 
         }
       }
 
-      await WeightDataService.replaceEntries(updatedEntries);
-      if (onDataChange) onDataChange();
+      await replaceEntries(updatedEntries);
       Alert.alert('Success', 'Dummy data added successfully');
     } catch (error) {
       console.error('Error adding dummy data:', error);
@@ -67,8 +63,12 @@ const GlobalDebugPanel: React.FC<GlobalDebugPanelProps> = ({ onDataChange }) => 
 
   const clearAllData = async () => {
     try {
-      await WeightDataService.clearAllEntries();
-      if (onDataChange) onDataChange();
+      const success = await clearEntries();
+      if (!success) {
+        Alert.alert('Error', 'Failed to clear data');
+        return;
+      }
+
       Alert.alert('Success', 'All data cleared successfully');
     } catch (error) {
       console.error('Error clearing data:', error);
@@ -88,7 +88,7 @@ const GlobalDebugPanel: React.FC<GlobalDebugPanelProps> = ({ onDataChange }) => 
           onPress: async () => {
             try {
               await asyncStorageClient.clear();
-              if (onDataChange) onDataChange();
+              await reload();
               Alert.alert('Success', 'All storage cleared successfully');
             } catch (error) {
               console.error('Error clearing storage:', error);
@@ -132,8 +132,7 @@ const GlobalDebugPanel: React.FC<GlobalDebugPanelProps> = ({ onDataChange }) => 
         });
       }
 
-      await WeightDataService.replaceEntries(yearData);
-      if (onDataChange) onDataChange();
+      await replaceEntries(yearData);
       Alert.alert('Success', 'A year of weight data generated successfully');
     } catch (error) {
       console.error('Error generating year data:', error);

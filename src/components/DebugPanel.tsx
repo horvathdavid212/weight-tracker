@@ -18,11 +18,7 @@ if (Platform.OS === 'android') {
     }
 }
 
-interface DebugPanelProps {
-    onDataChange: () => void;
-}
-
-const DebugPanel: React.FC<DebugPanelProps> = ({ onDataChange }) => {
+const DebugPanel: React.FC = () => {
     const [isExpanded, setIsExpanded] = useState(false);
 
     const togglePanel = () => {
@@ -46,7 +42,7 @@ const DebugPanel: React.FC<DebugPanelProps> = ({ onDataChange }) => {
                         <Text style={styles.closeButtonText}>Hide Debug Panel</Text>
                     </TouchableOpacity>
                     <DebugAsyncStorage />
-                    <DummyDataManager onDataChange={onDataChange} />
+                    <DummyDataManager />
                 </View>
             ) : (
                 <TouchableOpacity 

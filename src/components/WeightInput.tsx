@@ -1,13 +1,13 @@
 import React, {useState, useMemo} from 'react';
 import {StyleSheet, Alert} from 'react-native';
 import {WeightEntry} from '../types/WeightEntry';
-import {generateWeightEntryId, WeightDataService} from '../services/WeightDataService';
+import {generateWeightEntryId} from '../services/WeightDataService';
 import {Card, Input, Button, Text} from './ui';
 import {colors, spacing} from '../theme';
 import {useNextReminder} from '../hooks/useNextReminder';
 
 interface WeightInputProps {
-    onNewEntry: (entry: WeightEntry) => void;
+    onNewEntry: (entry: WeightEntry) => Promise<boolean>;
 }
 
 const WeightInput: React.FC<WeightInputProps> = ({onNewEntry}) => {
@@ -32,12 +32,9 @@ const WeightInput: React.FC<WeightInputProps> = ({onNewEntry}) => {
 
         try {
             setLoading(true);
-            // Use the data service to save the entry
-            const success = await WeightDataService.addEntry(newEntry);
+            const success = await onNewEntry(newEntry);
 
             if (success) {
-                // Notify parent of the new entry and clear the input
-                onNewEntry(newEntry);
                 setWeight('');
             } else {
                 Alert.alert('Error', 'There was a problem saving your weight. Please try again.');

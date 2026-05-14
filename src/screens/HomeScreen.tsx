@@ -1,52 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { WeightEntry } from '../types/WeightEntry';
 import WeightInput from "../components/WeightInput";
 import WeightChart from "../components/WeightChart";
 import WeightEntryList from "../components/WeightEntryList";
 import EditEntry from "../components/EditEntry";
-import { WeightDataService } from '../services/WeightDataService';
 import { Container } from '../components/ui';
 import { colors } from '../theme';
 
 import { StackScreenProps } from '@react-navigation/stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../types/navigation';
+import { useWeightEntries } from '../hooks/useWeightEntries';
 
-interface HomeScreenProps extends StackScreenProps<RootStackParamList, 'Home'> {
-    dataVersion: number;
-}
+type HomeScreenProps = StackScreenProps<RootStackParamList, 'Home'>;
 
-const HomeScreen: React.FC<HomeScreenProps> = ({ dataVersion }) => {
-    const [entries, setEntries] = useState<WeightEntry[]>([]);
+const HomeScreen: React.FC<HomeScreenProps> = () => {
     const [editingEntry, setEditingEntry] = useState<WeightEntry | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-
-    const loadEntries = React.useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const data = await WeightDataService.getEntries();
-            setEntries(data);
-        } catch (error) {
-            console.error('Error loading entries:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        void loadEntries();
-    }, [dataVersion, loadEntries]);
+    const { entries, isLoading, reload, addEntry, updateEntry, deleteEntry } = useWeightEntries();
 
     useFocusEffect(
         React.useCallback(() => {
-            void loadEntries();
-        }, [loadEntries])
+            void reload();
+        }, [reload])
     );
-
-    const handleNewEntry = (_entry: WeightEntry) => {
-        void loadEntries();
-    };
 
     const handleSelectEntry = (entry: WeightEntry) => {
         setEditingEntry(entry);
@@ -54,27 +31,23 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ dataVersion }) => {
 
     const handleUpdateEntry = async (updatedEntry: WeightEntry) => {
         try {
-            const success = await WeightDataService.updateEntry(updatedEntry.id, updatedEntry);
+            const success = await updateEntry(updatedEntry.id, updatedEntry);
             if (success) {
-                await loadEntries();
+                setEditingEntry(null);
             }
         } catch (error) {
             console.error('Error updating entry:', error);
-        } finally {
-            setEditingEntry(null);
         }
     };
 
     const handleDeleteEntry = async (id: string) => {
         try {
-            const success = await WeightDataService.deleteEntry(id);
+            const success = await deleteEntry(id);
             if (success) {
-                await loadEntries();
+                setEditingEntry(null);
             }
         } catch (error) {
             console.error('Error deleting entry:', error);
-        } finally {
-            setEditingEntry(null);
         }
     };
 
@@ -85,7 +58,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ dataVersion }) => {
                 isLoading={isLoading}
                 headerContent={(
                     <View>
-                        <WeightInput onNewEntry={handleNewEntry} />
+                        <WeightInput onNewEntry={addEntry} />
                         {!isLoading ? <WeightChart entries={entries} /> : null}
                     </View>
                 )}
